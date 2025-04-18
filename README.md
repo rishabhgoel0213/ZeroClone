@@ -1,4 +1,4 @@
-# AlphaZero-Dev
+# ZeroClone
 
 A personal journey to implement and understand DeepMind's AlphaGo Zero and AlphaZero algorithms from the ground up. Starting with basic math and machine learning knowledge, this project incrementally builds up the complexity of games and techniques to achieve high-level performance.
 
