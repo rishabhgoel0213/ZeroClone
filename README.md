@@ -45,7 +45,7 @@ The project follows a step-by-step approach:
 3. Integrate a value network to evaluate game states.
 4. Develop a policy network to predict optimal moves.
 5. Combine MCTS with policy and value networks to replicate AlphaZero's approach.
-6. Apply the framework to increasingly complex games, starting from simple ones like Tic-Tac-Toe to more complex ones like Go or Chess.
+6. Apply the framework to increasingly complex games, starting from simple ones like Connect 4 to more complex ones like Go or Chess.
 
 ## Contributing
 
