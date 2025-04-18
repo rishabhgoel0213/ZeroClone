@@ -1,0 +1,36 @@
+# Deep learning framework
+torch==2.1.0
+
+# Numerical computing
+numpy
+
+# Data manipulation & analysis
+pandas
+
+# Visualization (we’ll mainly use matplotlib)
+matplotlib
+seaborn
+
+# Progress bars (handy for training loops)
+tqdm
+
+# JupyterLab for interactive notebooks
+jupyterlab
+
+# Reinforcement Learning environments (if you use gymnasium-style setups)
+gym==0.26.2
+
+# For simple game-based visualizations (if needed)
+pygame
+
+# Machine learning utilities & baseline methods
+scikit-learn
+
+# For advanced numerical routines, signal processing, etc.
+scipy
+
+# Image processing (if you need to manipulate game states or for plotting)
+opencv-python
+
+# Logging and training monitoring
+tensorboard

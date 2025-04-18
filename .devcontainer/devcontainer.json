@@ -1,0 +1,26 @@
+{
+  "name": "alphazero-dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-toolsai.jupyter",
+    "ms-vscode.cpptools"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "runArgs": [
+    "--gpus=all"
+  ],
+  "containerEnv": {
+    "PYTHONUNBUFFERED": "1"
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "pip install -r requirements.txt || true"
+}
