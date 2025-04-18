@@ -9,7 +9,6 @@ players = ['White', 'Black']
 
 class Node:
     def __init__(self, state, parent=None, parent_action=None):
-
         self.state = state
         self.parent = parent
         self.parent_action = parent_action
