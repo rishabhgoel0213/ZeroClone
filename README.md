@@ -31,9 +31,9 @@ A personal journey to implement and understand DeepMind's AlphaGo Zero and Alpha
    ```
 
 3. **Run a specific module:**
-   Navigate to the desired directory (e.g., `VanillaMCTS/`) and execute the main script:
+   Navigate to the desired directory (e.g., `VanillaMCTS/`) and execute the game script to play against the bot:
    ```bash
-   python main.py
+   python game_name.py
    ```
 
 ## Progression Plan
