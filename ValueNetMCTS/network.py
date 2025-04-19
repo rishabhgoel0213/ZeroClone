@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Network(nn.Module):
-    def __init__(self):  # e.g. [10, 20, 30, 5]
+    def __init__(self, layer_sizes):
         super().__init__()
         self.layers = nn.ModuleList()
         self.layers.append(nn.Flatten())

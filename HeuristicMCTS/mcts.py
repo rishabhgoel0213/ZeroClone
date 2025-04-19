@@ -1,9 +1,5 @@
-from collections import namedtuple
 import chess
 import math
-import random
-
-State = namedtuple('State', ['board', 'turn'])
 
 players = ['White', 'Black']
 
@@ -16,7 +12,7 @@ class Node:
         self.children = {}
         
 
-        self.untried_moves = chess.get_legal_moves(state.board, players[state.turn])
+        self.untried_moves = chess.get_legal_moves(state)
         self.Na = dict.fromkeys(self.untried_moves, 0)
         self.Wa = dict.fromkeys(self.untried_moves, 0.0)
         self.Qa = dict.fromkeys(self.untried_moves, 0.0)
@@ -39,9 +35,7 @@ def expand(node):
     sorted_moves = sorted(node.untried_moves, key=lambda x: x[2])
     action = sorted_moves[0]
     node.untried_moves.remove(action)
-    new_state = State([row[:] for row in node.state.board], 1 - node.state.turn)
-    chess.play_move(new_state.board, action)
-    new_node = Node(new_state, parent=node, parent_action=action)
+    new_node = Node(chess.play_move(node.state, action), parent=node, parent_action=action)
     node.children[action] = new_node
     return new_node
 

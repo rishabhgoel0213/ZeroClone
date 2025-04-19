@@ -34,3 +34,6 @@ opencv-python
 
 # Logging and training monitoring
 tensorboard
+
+# Chess bot
+stockfish
