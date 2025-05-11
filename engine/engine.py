@@ -19,8 +19,8 @@ class Engine:
             self.config = yaml.safe_load(file)
             self.backend = importlib.import_module(f"engine.games.{self.config['game']}.{self.config['backend']}")
             self.state = self.backend.create_init_state()
-            self.value = Value(self.config.get('value_function'))
-            self.policy = Policy(name=self.config.get('policy_function', None), kwargs=self.config.get('policy', {}))
+            self.value = Value(self.config.get('value_function'), **self.config.get('value', {}))
+            self.policy = Policy(name=self.config.get('policy_function', None), **self.config.get('policy', {}))
 
     def play_move(self, move):
         self.state = self.backend.play_move(self.state, move)
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         help="name of config being used"
     )
     args = parser.parse_args()
-    path = f"/app/configs/{args.config}.yaml"
+    path = f"/app/ZeroClone/configs/{args.config}.yaml"
     engine = Engine(path)
     while True:
         print("\nCurrent board state:")

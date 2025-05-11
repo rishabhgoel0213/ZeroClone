@@ -1,11 +1,11 @@
 class Value:
-    def __init__(self, name **kwargs):
+    def __init__(self, name, **kwargs):
         self.name = name
         self.args = kwargs
 
     def __call__(self, state, **kwargs):
         method_ref = getattr(self, self.name)
-        return method_ref(state, args | kwargs)
+        return method_ref(state, self.args | kwargs)
 
     def random_rollout(self, state, args):
         import random
@@ -30,10 +30,13 @@ class Value:
         return factor * sum([piece_values.get(chr(p), 0) for p in state.board])
 
     def network_latest(self, state, args):
-        import torch            
-        model = args['value_network']
+        import torch
+        import os
+        from models.value.network import ValueNetwork
+        model = ValueNetwork() if not os.path.exists(args['model_path']) else torch.load(args['model_path'], map_location="cpu")
+        model.to('cuda')
         with torch.no_grad():
-            arr = cb.state_to_tensor(state)
+            arr = args['backend'].state_to_tensor(state)
             tensor = torch.tensor(arr, device='cuda')
             return model(tensor.unsqueeze(0)).item()
         
