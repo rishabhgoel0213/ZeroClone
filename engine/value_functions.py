@@ -48,14 +48,23 @@ class Value:
         path = self.init_args['model_path']
         self.model = ValueNetwork() if not os.path.exists(path) else torch.load(path, map_location="cpu")
         self.model.to('cuda').eval()
-        self.batch_size = self.init_args['batch_size']
+        self.batch_size = self.init_args.get('batch_size', 1)
         self._req_queue = queue.Queue()
         self._worker = threading.Thread(target=self._batch_worker, daemon=True)
         self._worker.start()
 
     def _batch_worker(self):
         while True:
-            batch = [self._req_queue.get() for _ in range(self.batch_size)]
+            tensor, out_q = self._req_queue.get()
+            batch = [(tensor, out_q)]
+
+            for _ in range(self.batch_size - 1):
+                try:
+                    tup = self._req_queue.get_nowait()
+                    batch.append(tup)
+                except queue.Empty:
+                    break      
+                      
             tensors, out_queues = zip(*batch)
             batch_tensor = torch.stack(tensors, dim=0)
 
