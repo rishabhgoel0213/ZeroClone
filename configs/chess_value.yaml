@@ -1,11 +1,10 @@
 game: chess
 backend: chess_backend
 value_function: network_latest
-policy_function: immediate_value
+policy_function: random
 mcts:
   simulations: 100
   c_puct: 1.4
 value:
   model_path: /app/ZeroClone/models/value/latest.pth
-policy:
-  policy_freedom: 3
+  batch_size: 1
