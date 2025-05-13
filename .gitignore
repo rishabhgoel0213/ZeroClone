@@ -1,0 +1,6 @@
+zeroclone.egg-info/
+.vscode/
+build/
+__pycache__/
+*.so
+venv/
