@@ -1,5 +1,6 @@
 from engine.engine import Engine
 import argparse
+import os
 
 
 parser = argparse.ArgumentParser(
@@ -12,7 +13,7 @@ parser.add_argument(
     help="name of config being used"
 )
 args = parser.parse_args()
-path = f"/app/ZeroClone/configs/{args.config}.yaml"
+path = f"{os.path.dirname(os.path.dirname(os.path.realpath(__file__)))}/configs/{args.config}.yaml"
 engine = Engine(path)
 unfinished = set(range(len(engine.states)))
 final_results = []

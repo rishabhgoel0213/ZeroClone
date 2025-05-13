@@ -14,7 +14,7 @@ class Engine:
             self.value = Value(self.config.get('value_function'), **self.config.get('value', {}))
             self.policy = Policy(name=self.config.get('policy_function', None), **self.config.get('policy', {}))
             init_state = self.backend.create_init_state()
-            self.states = [init_state] * self.config.get('threads', 1)
+            self.states = [init_state] * self.config.get('init_games', 1)
 
     def add_game(self, init_state=None):
         state = init_state or self.backend.create_init_state()
