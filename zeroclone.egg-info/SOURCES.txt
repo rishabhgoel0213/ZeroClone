@@ -1,5 +1,0 @@
-setup.py
-zeroclone.egg-info/PKG-INFO
-zeroclone.egg-info/SOURCES.txt
-zeroclone.egg-info/dependency_links.txt
-zeroclone.egg-info/top_level.txt
