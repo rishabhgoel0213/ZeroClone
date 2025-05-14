@@ -21,4 +21,5 @@ namespace chess
   bool check_draw(const State &state);
   State create_init_state();
   pybind11::array_t<float> state_to_tensor(const State &state);
+  State state_from_fen(const std::string &fen);
 }

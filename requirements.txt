@@ -2,3 +2,4 @@ pyyaml
 torch
 numpy<2.0
 pybind11
+pytest

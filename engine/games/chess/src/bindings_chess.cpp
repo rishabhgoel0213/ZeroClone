@@ -51,5 +51,7 @@ PYBIND11_MODULE(chess_backend, m)
             "Return true is last move resulted in a draw");
       m.def("create_init_state", &chess::create_init_state,
             "Return a fresh State in the standard starting chess position");
+      m.def("state_from_fen", &chess::state_from_fen, py::arg("fen"),
+            "Create a chess State from a FEN string");
 
 }

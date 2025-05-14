@@ -452,3 +452,49 @@ pybind11::array_t<float> chess::state_to_tensor(const State &state)
 
     return arr;
 }
+
+State chess::state_from_fen(const std::string &fen) {
+    // Board array to fill
+    std::array<uint8_t,64> bd;
+
+    // Split FEN fields
+    std::istringstream iss(fen);
+    std::string piece_placement, active_color, castling, enpassant;
+    int halfmove_clock = 0, fullmove_number = 1;
+    iss >> piece_placement >> active_color >> castling >> enpassant \
+        >> halfmove_clock >> fullmove_number;
+
+    // 1) Parse piece placement (ranks 8→1, files a→h)
+    int idx = 0;
+    for (char c : piece_placement) {
+        if (c == '/') {
+            continue;
+        }
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            int empty_cnt = c - '0';
+            for (int i = 0; i < empty_cnt; ++i) {
+                bd[idx++] = static_cast<uint8_t>(' ');
+            }
+        } else {
+            bd[idx++] = static_cast<uint8_t>(c);
+        }
+    }
+
+    // 2) Active color
+    uint8_t turn = (active_color == "w") ? 0 : 1;
+
+    // 3) Castling rights
+    bool w_ck = false, w_cq = false, b_ck = false, b_cq = false;
+    if (castling.find('K') != std::string::npos) w_ck = true;
+    if (castling.find('Q') != std::string::npos) w_cq = true;
+    if (castling.find('k') != std::string::npos) b_ck = true;
+    if (castling.find('q') != std::string::npos) b_cq = true;
+
+    // 4) We ignore en passant, halfmove and fullmove for now.
+    //    Future work could store enpassant square in State.
+
+    // 5) Empty move history
+    std::deque<Move> hist_w, hist_b;
+
+    return State(bd, turn, w_ck, w_cq, b_ck, b_cq, hist_w, hist_b);
+}
