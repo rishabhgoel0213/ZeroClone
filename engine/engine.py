@@ -4,6 +4,14 @@ import engine.core as core
 from engine.value_functions import Value
 from engine.policy_functions import Policy
 from concurrent.futures import ThreadPoolExecutor
+import torch
+from dataclasses import dataclass, field
+from typing import List, Any, Optional
+
+@dataclass
+class History:
+    states: list[Any] = field(default_factory=list)
+    result: Optional[int] = None
 
 
 class Engine:
@@ -14,20 +22,56 @@ class Engine:
             self.value = Value(self.config.get('value_function'), **self.config.get('value', {}))
             self.policy = Policy(name=self.config.get('policy_function', None), **self.config.get('policy', {}))
             init_state = self.backend.create_init_state()
-            self.states = [init_state] * self.config.get('init_games', 1)
+            num_init = self.config.get('init_games', 1)
+            self.states = [init_state for _ in range(num_init)]
+            self.history = [History(states=[init_state], result=None) for _ in range(num_init)]
 
     def add_game(self, init_state=None):
         state = init_state or self.backend.create_init_state()
         self.states.append(state)
+        self.history.append(History(states=[state], result=None))
         return len(self.states) - 1
     
     def get_state(self, idx=0):
         return self.states[idx]
+    
+    def get_hist(self, idx=0):
+        return list(self.history[idx])
+    
+    def get_dataset(self):
+        state_tensors = []
+        labels = []
+
+        for hist_entry in self.history:
+            states_seq = hist_entry.states
+            final_result = hist_entry.result
+            if final_result is None:
+                continue
+
+            for state in states_seq:
+                arr = self.backend.state_to_tensor(state)
+                t = torch.from_numpy(arr)
+                state_tensors.append(t)
+
+                factor = 1 if state.turn == 1 else -1
+                labels.append(final_result * factor)
+
+        if not state_tensors:
+            return (torch.empty((0,)), torch.empty((0,), dtype=torch.int64))
+
+        states_batch = torch.stack(state_tensors, dim=0)
+        results_batch = torch.tensor(labels, dtype=torch.int64)
+
+        return states_batch, results_batch
 
     def play_move(self, move, idx=0):
         new_state = self.backend.play_move(self.states[idx], move)
         self.states[idx] = new_state
-        return self._evaluate(new_state)
+
+        hist = self.history[idx]
+        hist.states.append(new_state)
+        hist.result = self._evaluate(new_state)
+        return hist.result
     
     def play_moves_parallel(self, moves, max_workers=None):
         results = {}

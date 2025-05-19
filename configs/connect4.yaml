@@ -1,6 +1,7 @@
 game: connect4
 backend: c4_backend
 value_function: random_rollout
+init_games: 8
 mcts:
   simulations: 1000
   c_puct: 1.4

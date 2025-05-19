@@ -377,7 +377,6 @@ State chess::play_move(const State &state, const Move &m)
 
 bool chess::check_win(const State &state)
 {
-
     return get_legal_moves(state).empty() && king_under_attack(state, state.turn);
 }
 
