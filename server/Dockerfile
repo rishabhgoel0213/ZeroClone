@@ -45,4 +45,3 @@ EXPOSE 8000
 # ---- Default launch command --------------------------------------------------
 # Replace `server.main:app` with your actual FastAPI entry-point.
 # CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD ["bash"]
