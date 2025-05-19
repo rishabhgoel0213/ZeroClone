@@ -3,6 +3,6 @@ set -e
 
 cd "$(dirname "$0")"
 
-source ../../../venv/bin/activate
+source /opt/venv/bin/activate
 
 python3 setup.py build_ext --inplace
