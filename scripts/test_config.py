@@ -11,9 +11,9 @@ def simulate_games(engine, total_games):
 
     while unfinished:
         print("\nCurrent board states:")
-        out = [f"      Game {i + 1} state: {engine.states[i]}" for i in unfinished]
-        for string in out:
-            print(string)
+        out = [f"\tGame {i + 1} state: {engine.states[i]}" for i in unfinished]
+        for o in out:
+            print(o)
 
         sims = engine.config['mcts']['simulations']
         c = engine.config['mcts']['c_puct']

@@ -48,13 +48,16 @@ class Engine:
             if final_result is None:
                 continue
 
+            factor = -1
+            label_entry = []
             for state in states_seq:
                 arr = self.backend.state_to_tensor(state)
                 t = torch.from_numpy(arr)
                 state_tensors.append(t)
 
-                factor = 1 if state.turn == 1 else -1
-                labels.append(final_result * factor)
+                label_entry.append(factor)
+                factor = -factor
+            labels += list(reversed(label_entry))
 
         if not state_tensors:
             return (torch.empty((0,)), torch.empty((0,), dtype=torch.int64))
