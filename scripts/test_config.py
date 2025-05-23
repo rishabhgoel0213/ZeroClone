@@ -88,7 +88,7 @@ if __name__ == "__main__":
     print_results(results)
     states, values = engine.get_dataset()
     print(states, values)
-    train_and_save_latest(engine.config['model_type'], states, values)
+    # train_and_save_latest(engine.config['model_type'], states, values)
 
     
 

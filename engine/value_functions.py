@@ -44,7 +44,7 @@ class Value:
 
     def init_network_latest(self):
         import os
-        import core
+        import engine.core as core
         module, latest_path = core.get_value_network(self.init_args['model_type'])
         ValueNetwork = getattr(module, "ValueNetwork")
         self.model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cpu")

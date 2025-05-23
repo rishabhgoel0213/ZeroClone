@@ -66,7 +66,7 @@ Useful global methods
 """
 def get_value_network(model_type):
         import importlib
-        module_name = f"model.{model_type}.network"
+        module_name = f"models.{model_type}.network"
         module = importlib.import_module(module_name)
 
         from pathlib import Path
