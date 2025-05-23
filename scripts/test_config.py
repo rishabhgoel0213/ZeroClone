@@ -2,7 +2,36 @@ from engine.engine import Engine
 import argparse
 import os
 
+def train_and_save_latest(model_type, states, values, epochs=10, lr=1e-3, batch_size=32, shuffle=True, num_workers=8):
+    import engine.core as core
+    import torch
+    from torch.utils.data import DataLoader
+    from datetime import datetime
 
+    module, latest_path = core.get_value_network(model_type)
+
+    ValueNetDataset = getattr(module, "ValueNetDataset")
+    dataset = ValueNetDataset(states, values)
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers
+    )
+
+    ValueNetwork = getattr(module, "ValueNetwork")
+    train_fn = getattr(module, "train")
+    model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cpu")
+    train_fn(model, loader, epochs, lr)
+
+    checkpoint_dir = latest_path.parent / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    if latest_path.exists():
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        checkpoint_path = checkpoint_dir / f"{ts}.pth"
+        latest_path.rename(checkpoint_path)
+    
 def simulate_games(engine, total_games):
     threads = len(engine.states)
     unfinished = set(range(threads))
@@ -31,8 +60,6 @@ def simulate_games(engine, total_games):
 
     return final_results
 
-
-
 def print_results(results):
     for i in range(len(results)):
         r = results[i]
@@ -42,7 +69,6 @@ def print_results(results):
             winner = 'Player 1' if r == 1 else 'Player 2'
             result = f"{winner} won!"
         print(f"Game {i + 1} result: {result}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -60,8 +86,10 @@ if __name__ == "__main__":
 
     results = simulate_games(engine, 4)
     print_results(results)
-    states_batch, results_batch = engine.get_dataset()
-    print(states_batch, results_batch)
+    states, values = engine.get_dataset()
+    print(states, values)
+    train_and_save_latest(engine.config['model_type'], states, values)
+
     
 
     

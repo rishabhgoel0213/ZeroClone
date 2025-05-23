@@ -40,13 +40,15 @@ class Value:
         factor = state.turn * 2 - 1
         return factor * sum([piece_values.get(chr(p), 0) for p in state.board])
 
-
+    
 
     def init_network_latest(self):
         import os
-        from models.value.network import ValueNetwork
-        path = self.init_args['model_path']
-        self.model = ValueNetwork() if not os.path.exists(path) else torch.load(path, map_location="cpu")
+        import core
+        module, latest_path = core.get_value_network(self.init_args['model_type'])
+        ValueNetwork = getattr(module, "ValueNetwork")
+        self.model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cpu")
+
         self.model.to('cuda').eval()
         self.batch_size = self.init_args.get('batch_size', 1)
         self._req_queue = queue.Queue()

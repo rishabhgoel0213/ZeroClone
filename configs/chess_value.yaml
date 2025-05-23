@@ -7,5 +7,5 @@ mcts:
   simulations: 100
   c_puct: 1.4
 value:
-  model_path: /app/ZeroClone/models/value/latest.pth
+  model_type: chess_value
   batch_size: 8

@@ -1,6 +1,10 @@
 import math
 import random
 
+
+"""
+Core MCTS logic
+"""
 class Node:
     def __init__(self, state, moves, parent=None, parent_action=None):
         self.state = state
@@ -56,3 +60,16 @@ def get_move(state, value, policy, backend, simulations=1000, c=1.4):
         result = value(leaf.state, backend=backend)
         backprop(leaf, result)
     return max(root.children.items(), key=lambda x: x[1].N)[0]
+
+"""
+Useful global methods
+"""
+def get_value_network(model_type):
+        import importlib
+        module_name = f"model.{model_type}.network"
+        module = importlib.import_module(module_name)
+
+        from pathlib import Path
+        here = Path(__file__).resolve().parent
+        latest_path = here.parent / "models" / model_type / "latest.pth"
+        return module, latest_path

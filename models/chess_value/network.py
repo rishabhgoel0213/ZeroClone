@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset
+import numpy as np
 
 class ValueNetwork(nn.Module):
     def __init__(self):
@@ -27,9 +28,8 @@ class ValueNetwork(nn.Module):
         x = self.tanh(x)
         return x
 
-class ChessStateDataset(Dataset):
+class ValueNetDataset(Dataset):
     def __init__(self, states, values):
-        import numpy as np
         self.states = torch.from_numpy(states).float()
         self.values = torch.from_numpy(values).float()
 

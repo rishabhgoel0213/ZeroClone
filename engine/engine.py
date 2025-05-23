@@ -39,7 +39,8 @@ class Engine:
         return list(self.history[idx])
     
     def get_dataset(self):
-        state_tensors = []
+        import numpy as np
+        state_arrays = []
         labels = []
 
         for hist_entry in self.history:
@@ -52,20 +53,21 @@ class Engine:
             label_entry = []
             for state in states_seq:
                 arr = self.backend.state_to_tensor(state)
-                t = torch.from_numpy(arr)
-                state_tensors.append(t)
-
+                state_arrays.append(arr.astype(np.float32))
                 label_entry.append(factor)
                 factor = -factor
             labels += list(reversed(label_entry))
 
-        if not state_tensors:
-            return (torch.empty((0,)), torch.empty((0,), dtype=torch.int64))
+        if not state_arrays:
+            dummy = self.backend.state_to_tensor(self.backend.get_init_state())
+            empty_states = np.empty((0,) + dummy.shape, dtype=np.float32)
+            empty_labels = np.empty((0,), dtype=np.float32)
+            return empty_states, empty_labels
+        
+        states_np = np.stack(state_arrays, axis=0)
+        results_np = np.array(labels, dtype=torch.int64)
 
-        states_batch = torch.stack(state_tensors, dim=0)
-        results_batch = torch.tensor(labels, dtype=torch.int64)
-
-        return states_batch, results_batch
+        return states_np, results_np
 
     def play_move(self, move, idx=0):
         new_state = self.backend.play_move(self.states[idx], move)
