@@ -38,6 +38,18 @@ class ValueNetDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.states[idx], self.values[idx]
+    
+def add_safe_globals():
+    torch.serialization.add_safe_globals([
+        ValueNetwork,
+        nn.modules.conv.Conv2d, 
+        nn.modules.batchnorm.BatchNorm2d, 
+        nn.modules.activation.ReLU,
+        nn.modules.pooling.AdaptiveAvgPool2d,
+        nn.modules.linear.Linear,
+        nn.modules.activation.Tanh
+    ])
+
 
 
 def train(model, dataloader, epochs=10, lr=1e-3, device='cuda'):

@@ -2,7 +2,7 @@ game: chess
 backend: chess_backend
 value_function: network_latest
 policy_function: random
-init_games: 4
+init_games: 8
 mcts:
   simulations: 100
   c_puct: 1.4

@@ -45,8 +45,11 @@ class Value:
     def init_network_latest(self):
         import os
         import engine.core as core
+        import torch
         module, latest_path = core.get_value_network(self.init_args['model_type'])
         ValueNetwork = getattr(module, "ValueNetwork")
+        globals_fn = getattr(module, "add_safe_globals")
+        globals_fn()
         self.model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cpu")
 
         self.model.to('cuda').eval()

@@ -2,7 +2,7 @@ from engine.engine import Engine
 import argparse
 import os
 
-def train_and_save_latest(model_type, states, values, epochs=10, lr=1e-3, batch_size=32, shuffle=True, num_workers=8):
+def train_and_save_latest(model_type, states, values, epochs=10, lr=1e-4, batch_size=32, shuffle=True, num_workers=8):
     import engine.core as core
     import torch
     from torch.utils.data import DataLoader
@@ -31,6 +31,8 @@ def train_and_save_latest(model_type, states, values, epochs=10, lr=1e-3, batch_
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         checkpoint_path = checkpoint_dir / f"{ts}.pth"
         latest_path.rename(checkpoint_path)
+
+    torch.save(model, latest_path)
     
 def simulate_games(engine, total_games):
     threads = len(engine.states)
@@ -84,11 +86,11 @@ if __name__ == "__main__":
     path = f"{os.path.dirname(os.path.dirname(os.path.realpath(__file__)))}/configs/{args.config}.yaml"
     engine = Engine(path)
 
-    results = simulate_games(engine, 8)
+    results = simulate_games(engine, 100)
     print_results(results)
     states, values = engine.get_dataset()
     print(states, values)
-    # train_and_save_latest(engine.config['model_type'], states, values)
+    train_and_save_latest(engine.config['value']['model_type'], states, values)
 
     
 
