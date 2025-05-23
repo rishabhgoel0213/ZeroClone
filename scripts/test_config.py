@@ -34,7 +34,7 @@ def train_and_save_latest(model_type, states, values, epochs=10, lr=1e-3, batch_
     
 def simulate_games(engine, total_games):
     threads = len(engine.states)
-    unfinished = set(range(threads))
+    unfinished = set(range(min(total_games, threads)))
     final_results = [None for _ in range(total_games)]
     finished_count = 0
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     path = f"{os.path.dirname(os.path.dirname(os.path.realpath(__file__)))}/configs/{args.config}.yaml"
     engine = Engine(path)
 
-    results = simulate_games(engine, 4)
+    results = simulate_games(engine, 8)
     print_results(results)
     states, values = engine.get_dataset()
     print(states, values)

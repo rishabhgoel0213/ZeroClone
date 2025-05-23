@@ -65,7 +65,7 @@ class Engine:
             return empty_states, empty_labels
         
         states_np = np.stack(state_arrays, axis=0)
-        results_np = np.array(labels, dtype=torch.int64)
+        results_np = np.array(labels, dtype=np.int64)
 
         return states_np, results_np
 

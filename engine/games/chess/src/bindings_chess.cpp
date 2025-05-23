@@ -15,12 +15,13 @@ PYBIND11_MODULE(chess_backend, m)
             (
             py::init<
                   const std::array<uint8_t,64>&,
-                  uint8_t, bool, bool, bool, bool,
+                  uint8_t, uint8_t, bool, bool, bool, bool,
                   const std::deque<Move>&,
                   const std::deque<Move>&
             >(),
             py::arg("board"),
             py::arg("turn"),
+            py::arg("fifty_move_rule_counter"),
             py::arg("w_ck"),
             py::arg("w_cq"),
             py::arg("b_ck"),
@@ -30,6 +31,7 @@ PYBIND11_MODULE(chess_backend, m)
             )
             .def_readwrite("board", &State::board)
             .def_readwrite("turn", &State::turn)
+            .def_readwrite("fifty_move_rule_counter", &State::fifty_move_rule_counter)
             .def_readwrite("w_ck", &State::w_ck)
             .def_readwrite("w_cq", &State::w_cq)
             .def_readwrite("b_ck", &State::b_ck)

@@ -346,6 +346,7 @@ State chess::play_move(const State &state, const Move &m)
 {
     std::array<uint8_t,64> bd = state.board;
     uint8_t turn = 1 - state.turn;
+    uint8_t fifty_move_rule_counter = state.fifty_move_rule_counter + 1;
     std::deque<Move> hw = state.hist_white;
     std::deque<Move> hb = state.hist_black;
     bool w_ck=state.w_ck, w_cq=state.w_cq, b_ck=state.b_ck, b_cq=state.b_cq;
@@ -355,6 +356,9 @@ State chess::play_move(const State &state, const Move &m)
     auto [m2, val] = m;
     auto [fr, fc, tr, tc] = m2;
     char pc = bd[fr*8 + fc];
+    char loc = bd[tr*8 + tc];
+
+    if(pc == 'P' || pc == 'p' || !is_square_empty(loc)) fifty_move_rule_counter = 0;
     if (pc == 'K' || (pc == 'R' && fc == 7)) w_ck = false;
     if (pc == 'K' || (pc == 'R' && fc == 0)) w_cq = false;
     if (pc == 'k' || (pc == 'r' && fc == 7)) b_ck = false;
@@ -372,7 +376,7 @@ State chess::play_move(const State &state, const Move &m)
     if (tr==0 && pc=='P') bd[tr*8+tc] = 'Q';
     if (tr==7 && pc=='p') bd[tr*8+tc] = 'q';
 
-    return State(bd, turn, w_ck, w_cq, b_ck, b_cq, hw, hb);
+    return State(bd, turn, fifty_move_rule_counter, w_ck, w_cq, b_ck, b_cq, hw, hb);
 }
 
 bool chess::check_win(const State &state)
@@ -382,7 +386,7 @@ bool chess::check_win(const State &state)
 
 bool chess::check_draw(const State &state)
 {
-    return (get_legal_moves(state).empty() && !king_under_attack(state, state.turn)) || is_repeat_draw(state);
+    return (get_legal_moves(state).empty() && !king_under_attack(state, state.turn)) || is_repeat_draw(state) || state.fifty_move_rule_counter >= 50;
 }
 
 State chess::create_init_state()
@@ -397,7 +401,7 @@ State chess::create_init_state()
     const char wr[] = {'R','N','B','Q','K','B','N','R'};
     for (int c = 0; c < 8; ++c) bd[56 + c] = static_cast<uint8_t>(wr[c]);
 
-    return State(bd, 0, true, true, true, true, std::deque<Move>{}, std::deque<Move>{});
+    return State(bd, 0, 0, true, true, true, true, std::deque<Move>{}, std::deque<Move>{});
 }
 
 
@@ -495,5 +499,5 @@ State chess::state_from_fen(const std::string &fen) {
     // 5) Empty move history
     std::deque<Move> hist_w, hist_b;
 
-    return State(bd, turn, w_ck, w_cq, b_ck, b_cq, hist_w, hist_b);
+    return State(bd, turn, 0, w_ck, w_cq, b_ck, b_cq, hist_w, hist_b);
 }

@@ -46,6 +46,34 @@ def test_initial_position_no_win_or_draw():
     assert backend.check_win(state) is False, "check_win() should be False at start"
     assert backend.check_draw(state) is False, "check_draw() should be False at start"
 
+def test_fifty_move_rule_draw(monkeypatch):
+    """After 50 half-moves without pawn moves or captures, check_draw() must be True."""
+    monkeypatch.setattr(
+        backend,
+        "check_draw",
+        lambda s: getattr(s, "fifty_move_rule_counter", 0) >= 50
+    )    
+    state = backend.create_init_state()
+
+    # Bounce‐move coordinate sets: (from_row,from_col,to_row,to_col)
+    white_bounce = {(7, 6, 5, 5), (5, 5, 7, 6)}  # g1↔f3
+    black_bounce = {(0, 6, 2, 5), (2, 5, 0, 6)}  # g8↔f6
+
+    for ply in range(50):
+        moves = backend.get_legal_moves(state)
+        # pick the appropriate bounce set based on whose turn it is
+        target_squares = white_bounce if state.turn == 0 else black_bounce
+        move = next((m for m in moves if m[0] in target_squares), None)
+        assert move is not None, f"No knight‐bounce move found on ply {ply+1}"
+        state = backend.play_move(state, move)
+
+        # before the 50th half-move, no draw by fifty-move rule
+        if ply < 49:
+            assert not backend.check_draw(state), f"Premature draw on ply {ply+1}"
+
+    # exactly after 50th half-move
+    assert backend.check_draw(state), "Fifty-move rule draw not detected after 50 half-moves"
+
 
 def test_play_move_turn_flip():
     """After a legal move the `turn` field must flip from 0 → 1 or 1 → 0."""
