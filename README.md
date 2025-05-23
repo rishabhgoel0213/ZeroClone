@@ -26,8 +26,6 @@ The script will:
 
 Once inside the container you can immediately run training or play games without any extra steps.
 
-> **Tip 🛠️**  If you exit the container and want to re‑enter it later, use `docker start -ai zeroclone_dev` (the script names the container `zeroclone_dev`).
-
 ## Usage
 
 ### Self‑Play & Training
