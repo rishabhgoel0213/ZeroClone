@@ -1,5 +1,5 @@
 from collections import namedtuple
-import random
+import numpy as np
 
 State = namedtuple('State', ['board', 'turn'])
 
@@ -10,7 +10,6 @@ tokens = ['X', 'O']
 
 def create_init_state():
     return State([[' ' for _ in range(COLS)] for _ in range(ROWS)], 0)
-
 
 def play_move(state, move):
     def copy_state(state):
@@ -49,14 +48,15 @@ def check_draw(state):
 def get_legal_moves(state):
     return {(i, 0)  for i in range(COLS) if state.board[0][i] == ' '}
 
-def get_value(state):
-    turn_copy = state.turn
-    while not check_win(state) and not is_tie(state):
-        state = play_move(state, random.choice(list(get_legal_moves(state))))
+def state_to_tensor(state):
+    current_token = tokens[state.turn]
+    opp_token     = tokens[1 - state.turn]
 
-    if check_draw(state):
-        return 0
-    else:
-        return -1 if state.turn == turn_copy else 1
+    board_arr = np.array(state.board)
+
+    current_plane  = (board_arr == current_token).astype(np.float32)
+    opponent_plane = (board_arr == opp_token).astype(np.float32)
+
+    return np.stack([current_plane, opponent_plane], axis=0)
 
 

@@ -16,15 +16,19 @@ class History:
 
 class Engine:
     def __init__(self, config):
+        """
+        Creates a game engine based on specified path to a valid configuration file
+        Defines backend, value, policy, numpy of threads, a states array, and a history array
+        """
         with open(config, 'r') as file:
             self.config = yaml.safe_load(file)
             self.backend = importlib.import_module(f"engine.games.{self.config['game']}.{self.config['backend']}")
             self.value = Value(self.config.get('value_function'), **self.config.get('value', {}))
             self.policy = Policy(name=self.config.get('policy_function', None), **self.config.get('policy', {}))
             init_state = self.backend.create_init_state()
-            num_init = self.config.get('init_games', 1)
-            self.states = [init_state for _ in range(num_init)]
-            self.history = [History(states=[init_state], result=None) for _ in range(num_init)]
+            threads = self.config.get('threads', 1)
+            self.states = [init_state for _ in range(threads)]
+            self.history = [History(states=[init_state], result=None) for _ in range(threads)]
 
     def add_game(self, init_state=None):
         state = init_state or self.backend.create_init_state()

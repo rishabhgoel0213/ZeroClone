@@ -17,5 +17,5 @@ docker run --gpus all \
   sleep infinity
 
 echo
-echo "✅  Container is up. Attach a shell with:"
+echo "Container is up. Attach a shell with:"
 echo "    docker exec -it $CONTAINER_NAME bash"

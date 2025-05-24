@@ -3,7 +3,7 @@ import argparse
 import os
 
 def train_and_save_latest(model_type, states, values, epochs=10, lr=1e-4, batch_size=32, shuffle=True, num_workers=8):
-    import engine.core as core
+    import models.core as core
     import torch
     from torch.utils.data import DataLoader
     from datetime import datetime
@@ -35,8 +35,7 @@ def train_and_save_latest(model_type, states, values, epochs=10, lr=1e-4, batch_
     torch.save(model, latest_path)
     
 def simulate_games(engine, total_games):
-    threads = len(engine.states)
-    unfinished = set(range(min(total_games, threads)))
+    unfinished = set(range(min(total_games, engine.threads)))
     final_results = [None for _ in range(total_games)]
     finished_count = 0
 
@@ -86,11 +85,15 @@ if __name__ == "__main__":
     path = f"{os.path.dirname(os.path.dirname(os.path.realpath(__file__)))}/configs/{args.config}.yaml"
     engine = Engine(path)
 
-    results = simulate_games(engine, 100)
+    results = simulate_games(engine, 1)
     print_results(results)
     states, values = engine.get_dataset()
     print(states, values)
-    train_and_save_latest(engine.config['value']['model_type'], states, values)
+
+    if 'value' in engine.config:
+        train_and_save_latest(engine.config['value']['model_type'], states, values)
+    else:
+        print("No network to train. Exiting now.")
 
     
 
