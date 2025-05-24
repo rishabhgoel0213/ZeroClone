@@ -4,8 +4,6 @@
 **ZeroClone** is a general game-playing AI engine inspired by DeepMind’s AlphaZero. It combines **Monte Carlo Tree Search (MCTS)** with deep neural networks to learn strong play through self-play.  
 The framework is modular—new games can be added by implementing a small backend interface—while offering high-performance C++ back-ends for existing games (currently **Chess** and **Connect Four**).
 
----
-
 ## Installation
 
 > **The only officially tested setup method is via Docker.**  
@@ -22,8 +20,6 @@ The framework is modular—new games can be added by implementing a small backen
 
 * Builds an image tagged `zeroclone` from `server/Dockerfile`.
 * Starts a container with the repo mounted and GPU passthrough (`--gpus all`) if available.
-
----
 
 ## Usage
 
@@ -50,7 +46,7 @@ state = eng.play_mcts(idx=0, simulations=800)   # one strong move
 
 ```bash
 # 1 – (be sure you’re inside the running container)
-python api.py -c configs/connect4.yaml --host 0.0.0.0 --port 8000 &
+python server/main.py -c configs/connect4.yaml --host 0.0.0.0 --port 8000 &
 #            ^ bind to 0.0.0.0 so Docker’s port-mapping can reach it
 
 # 2 – (in another terminal on the host) map the port when you start the container
@@ -78,8 +74,6 @@ curl http://localhost:8000/state/0                           # board snapshot
 > http POST :8000/add_game
 > http POST :8000/play_move idx:=0 move:='[3,0]'
 > ```
-
----
 
 ## Technologies Used
 
