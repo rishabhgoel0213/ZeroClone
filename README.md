@@ -47,14 +47,8 @@ state = eng.play_mcts(idx=0, simulations=800)   # one strong move
 ```bash
 # 1 – (be sure you’re inside the running container)
 python server/main.py -c configs/connect4.yaml --host 0.0.0.0 --port 8000 &
-#            ^ bind to 0.0.0.0 so Docker’s port-mapping can reach it
 
-# 2 – (in another terminal on the host) map the port when you start the container
-#      If you used build_and_run.sh, restart with:
-docker run -it --gpus all -p 8000:8000 --entrypoint bash zeroclone
-#                                       ^ host:container port map
-
-# 3 – hit the endpoints from your host
+# 2 – hit the endpoints from your host
 curl -X POST http://localhost:8000/add_game                  # -> {"idx":0}
 
 curl -X POST http://localhost:8000/play_move \
