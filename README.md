@@ -6,7 +6,7 @@
 
 ## Installation
 
-> **The only officially tested setup method is via Docker.** The repository includes a helper script that both **builds** the Docker image **and** drops you into a ready‑to‑use container.
+> **The only officially tested setup method is via Docker.** The repository includes a helper script that both **builds** the Docker image **and** starts a ready‑to‑use container.
 
 ### Prerequisites
 

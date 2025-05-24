@@ -3,7 +3,7 @@
 # - CUDA 12.1 + cuDNN 8 runtime (Ubuntu 22.04)
 # - Creates an isolated venv under /opt/venv
 # - Runs the project-level setup.sh (marks it executable first)
-# - Pre-loads github.com host key so git pulls don’t block
+# - Pre-loads github.com host key so version control works
 # - Exposes port 8000 for the FastAPI service
 ###############################################################################
 

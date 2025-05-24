@@ -18,7 +18,7 @@ class Engine:
     def __init__(self, config):
         """
         Creates a game engine based on specified path to a valid configuration file
-        Defines backend, value, policy, numpy of threads, a states array, and a history array
+        Defines a backend, value function, policy function, number of threads, a states array, and a history array
         """
         with open(config, 'r') as file:
             self.config = yaml.safe_load(file)
