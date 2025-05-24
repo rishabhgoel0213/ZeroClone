@@ -76,8 +76,6 @@ curl http://localhost:8000/state/0                           # board snapshot
 * **FastAPI** for serving games over HTTP
 * **Docker** for reproducible, GPU-ready environments
 
----
-
 ## Contributing
 
 1. **Fork** → **Branch** → **PR**.  Keep commits focused & descriptive.
@@ -85,8 +83,6 @@ curl http://localhost:8000/state/0                           # board snapshot
 3. Document new configs and add tests when adding features or new games.
 
 Feel free to open an issue for bug reports or feature requests.
-
----
 
 ## License
 
