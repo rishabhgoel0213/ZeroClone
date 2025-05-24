@@ -1,68 +1,104 @@
 # ZeroClone
 
 ## Project Overview
+**ZeroClone** is a general game-playing AI engine inspired by DeepMind’s AlphaZero. It combines **Monte Carlo Tree Search (MCTS)** with deep neural networks to learn strong play through self-play.  
+The framework is modular—new games can be added by implementing a small backend interface—while offering high-performance C++ back-ends for existing games (currently **Chess** and **Connect Four**).
 
-**ZeroClone** is a general game‑playing AI engine inspired by DeepMind’s AlphaZero. It combines **Monte Carlo Tree Search (MCTS)** with deep neural networks to learn strong play through self‑play. The framework is modular—new games can be added by implementing a small backend interface—while offering high‑performance C++ back‑ends for existing games (currently **Chess** and **Connect Four**).
+---
 
 ## Installation
 
-> **The only officially tested setup method is via Docker.** The repository includes a helper script that both **builds** the Docker image **and** starts a ready‑to‑use container.
+> **The only officially tested setup method is via Docker.**  
+> A helper script both **builds** the image **and** launches an interactive container.
 
 ### Prerequisites
+* **Docker** ≥ 20.10  
+* **NVIDIA Container Toolkit** *(optional, but required for GPU acceleration)*
 
-* **Docker** (≥ 20.10)
-* **NVIDIA Container Toolkit** *(optional, but required for GPU acceleration)*
-
-### One‑Line Setup
-
+### One-Line Setup
 ```bash
-./build_and_run.sh               # builds image and starts an interactive container
-```
+./build_and_run.sh           # builds image and drops you into a bash shell inside it
+````
 
-The script will:
+* Builds an image tagged `zeroclone` from `server/Dockerfile`.
+* Starts a container with the repo mounted and GPU passthrough (`--gpus all`) if available.
 
-1. Build an image tagged `zeroclone` using the Dockerfile in `server/`.
-2. Start an interactive container with the current repository mounted inside and—if available—your GPU passed through (via `--gpus all`).
-
-Once inside the container you can immediately run training or play games without any extra steps.
+---
 
 ## Usage
 
-### Self‑Play & Training
-
-Run a self‑play session followed by value‑network training, using the YAML config of your choice:
+### 1. Self-Play & Training
 
 ```bash
-python scripts/train.py -c connect4          # Connect Four example
-python scripts/train.py -c chess_value       # Chess example
+python scripts/train.py -c connect4    # Connect Four config
+python scripts/train.py -c chess_value # Chess config
 ```
 
-Adjust parameters (MCTS sims, network depth, etc.) by editing `configs/*.yaml`.
+Tweak MCTS sims, network depth, etc. in the corresponding `configs/*.yaml`.
 
-### Programmatic Engine Use
+### 2. Programmatic Engine Access
 
 ```python
 from engine.engine import Engine
 eng = Engine("configs/connect4.yaml")
-state = eng.play_mcts(idx=0, simulations=800)   # play one high‑quality move
+state = eng.play_mcts(idx=0, simulations=800)   # one strong move
 ```
 
-See `examples/` for more detailed notebooks and scripts.
+### 3. REST API (FastAPI server)
+
+#### 3-step quick-start
+
+```bash
+# 1 – (be sure you’re inside the running container)
+python api.py -c configs/connect4.yaml --host 0.0.0.0 --port 8000 &
+#            ^ bind to 0.0.0.0 so Docker’s port-mapping can reach it
+
+# 2 – (in another terminal on the host) map the port when you start the container
+#      If you used build_and_run.sh, restart with:
+docker run -it --gpus all -p 8000:8000 --entrypoint bash zeroclone
+#                                       ^ host:container port map
+
+# 3 – hit the endpoints from your host
+curl -X POST http://localhost:8000/add_game                  # -> {"idx":0}
+
+curl -X POST http://localhost:8000/play_move \
+     -H "Content-Type: application/json" \
+     -d '{"idx": 0, "move": [3, 0]}'                         # play column 3
+
+curl -X POST http://localhost:8000/play_mcts \
+     -H "Content-Type: application/json" \
+     -d '{"idx": 0, "simulations": 800, "c": 1.4}'
+
+curl http://localhost:8000/state/0                           # board snapshot
+```
+
+> **Tip:** Prefer [HTTPie](https://httpie.io/) for a friendlier CLI:
+>
+> ```bash
+> http POST :8000/add_game
+> http POST :8000/play_move idx:=0 move:='[3,0]'
+> ```
+
+---
 
 ## Technologies Used
 
-* **Python 3**  ·  **PyTorch**  ·  **Monte Carlo Tree Search**
-* **C++ / PyBind11** back‑ends for speed‑critical game logic
-* **FastAPI** *(planned)* for serving games over HTTP
-* **Docker** for reproducible, GPU‑ready environments
+* **Python 3**  ·  **PyTorch**  ·  **Monte Carlo Tree Search**
+* **C++ / PyBind11** back-ends for speed-critical game logic
+* **FastAPI** for serving games over HTTP
+* **Docker** for reproducible, GPU-ready environments
+
+---
 
 ## Contributing
 
-1. **Fork** → **Branch** → **PR**.  Keep commits focused and descriptive.
+1. **Fork** → **Branch** → **PR**.  Keep commits focused & descriptive.
 2. Ensure `pytest` passes and `./build_and_run.sh` still works.
-3. Document new config options and add tests when adding features or new games.
+3. Document new configs and add tests when adding features or new games.
 
 Feel free to open an issue for bug reports or feature requests.
+
+---
 
 ## License
 

@@ -8,13 +8,19 @@ Endpoints:
 - POST /add_game: add a new game instance and receive its index
 - GET  /state/{idx}: fetch the current state of a specific game instance
 
-Usage:
+Usage (CLI):
     python api.py -c path/to/config.yaml [--host HOST] [--port PORT] [--reload]
+
+Usage (Uvicorn):
+    export CONFIG_PATH=path/to/config.yaml
+    uvicorn api:app --host 0.0.0.0 --port 8000 --reload
 
 The server will be available at http://HOST:PORT
 """
 import argparse
+import os
 from typing import Any
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -22,8 +28,23 @@ import uvicorn
 
 from engine.engine import Engine
 
-app = FastAPI()
-engine: Engine  # Will be initialized in main()
+# Path to config; set via CLI or CONFIG_PATH env var
+config_path: str = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize Engine on startup
+    cfg = config_path or os.getenv("CONFIG_PATH")
+    if not cfg:
+        raise RuntimeError(
+            "Config file path must be set. Use `python api.py -c` or set CONFIG_PATH env var"
+        )
+    app.state.engine = Engine(cfg)
+    yield
+    # (Optional) add shutdown logic here
+
+# Create app with lifespan handler
+app = FastAPI(lifespan=lifespan)
 
 # Pydantic models for request bodies
 class MoveRequest(BaseModel):
@@ -37,38 +58,34 @@ class MCTSRequest(BaseModel):
 
 @app.post("/play_move")
 def play_move(req: MoveRequest):
-    """Play a user-specified move on game instance `idx`."""
     try:
-        result = engine.play_move(req.move, req.idx)
-        state = engine.get_state(req.idx)
+        result = app.state.engine.play_move(req.move, req.idx)
+        state = app.state.engine.get_state(req.idx)
         return {"idx": req.idx, "result": result, "state": repr(state)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/play_mcts")
 def play_mcts(req: MCTSRequest):
-    """Play a move via the MCTS bot on game instance `idx`."""
     try:
-        result = engine.play_mcts(req.idx, req.simulations, req.c)
-        state = engine.get_state(req.idx)
+        result = app.state.engine.play_mcts(req.idx, req.simulations, req.c)
+        state = app.state.engine.get_state(req.idx)
         return {"idx": req.idx, "result": result, "state": repr(state)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/add_game")
 def add_game():
-    """Add a new game instance and get its index."""
     try:
-        idx = engine.add_game()
+        idx = app.state.engine.add_game()
         return {"idx": idx}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/state/{idx}")
 def get_state(idx: int):
-    """Retrieve the current state of game instance `idx`."""
     try:
-        state = engine.get_state(idx)
+        state = app.state.engine.get_state(idx)
         return {"idx": idx, "state": repr(state)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -90,9 +107,10 @@ def main():
     )
     args = parser.parse_args()
 
-    global engine
-    engine = Engine(args.config)
+    global config_path
+    config_path = args.config
 
+    # Use import string for reload/workers support
     uvicorn.run("main:app", host=args.host, port=args.port, reload=args.reload)
 
 if __name__ == "__main__":
