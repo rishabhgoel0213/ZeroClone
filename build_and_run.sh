@@ -11,7 +11,7 @@ docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" .
 echo "Starting container ${CONTAINER_NAME} in detached mode…"
 docker run --gpus all \
   -d \
-  -p 8000:8000
+  -p 8000:8000 \
   --name "$CONTAINER_NAME" \
   --rm \
   "$IMAGE_NAME" \
