@@ -16,4 +16,4 @@ docker build \
 echo "Launching container with GPU access…"
 docker run --gpus all -it --rm \
   "${IMAGE_NAME}" \
-  bash
+  sleep infinity
