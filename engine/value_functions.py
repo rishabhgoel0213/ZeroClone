@@ -23,10 +23,8 @@ class Value:
         while not backend.check_win(state) and not backend.check_draw(state):
             state = backend.play_move(state, random.choice(list(backend.get_legal_moves(state))))
         if backend.check_win(state):
-            if state.turn == inital_turn:
-                return -1
-            else:
-                return 1
+            winner = state.turn
+            return 1 if winner == inital_turn else -1
         else:
             return 0
 
@@ -44,7 +42,7 @@ class Value:
 
     def init_network_latest(self):
         import os
-        import engine.core as core
+        import models.core as core
         import torch
         module, latest_path = core.get_value_network(self.init_args['model_type'])
         ValueNetwork = getattr(module, "ValueNetwork")

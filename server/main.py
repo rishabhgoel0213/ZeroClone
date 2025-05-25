@@ -7,18 +7,11 @@ Endpoints:
 - POST /play_mcts: play a move via the MCTS bot on a specific game instance
 - POST /add_game: add a new game instance and receive its index
 - GET  /state/{idx}: fetch the current state of a specific game instance
-
-Usage (CLI):
-    python api.py -c path/to/config.yaml [--host HOST] [--port PORT] [--reload]
-
-Usage (Uvicorn):
-    export CONFIG_PATH=path/to/config.yaml
-    uvicorn api:app --host 0.0.0.0 --port 8000 --reload
-
-The server will be available at http://HOST:PORT
 """
+
 import argparse
 import os
+import collections
 from typing import Any
 from contextlib import asynccontextmanager
 
@@ -27,6 +20,36 @@ from pydantic import BaseModel
 import uvicorn
 
 from engine.engine import Engine
+
+# === Game-agnostic state serializer ===
+def serialize_state(s: object) -> dict:
+    """
+    Turn any backend State object into a dict of primitives/lists.
+    - If it has .board, dump that (list or nested list).
+    - If it has simple attrs (turn, etc), include those.
+    """
+    out = {}
+    # 1) board
+    if hasattr(s, 'board'):
+        b = getattr(s, 'board')
+        try:
+            out['board'] = list(b)
+        except Exception:
+            out['board'] = b
+
+    # 2) any other simple attributes
+    for name in dir(s):
+        if name.startswith('_') or name == 'board':
+            continue
+        try:
+            v = getattr(s, name)
+        except Exception:
+            continue
+        if isinstance(v, (int, float, str, bool)):
+            out[name] = v
+        elif isinstance(v, collections.deque):
+            out[name] = list(v)
+    return out
 
 # Path to config; set via CLI or CONFIG_PATH env var
 config_path: str = None
@@ -59,9 +82,10 @@ class MCTSRequest(BaseModel):
 @app.post("/play_move")
 def play_move(req: MoveRequest):
     try:
-        result = app.state.engine.play_move(req.move, req.idx)
-        state = app.state.engine.get_state(req.idx)
-        return {"idx": req.idx, "result": result, "state": repr(state)}
+        move = (req.move, 0)
+        result = app.state.engine.play_move(move, req.idx)
+        state  = app.state.engine.get_state(req.idx)
+        return {"idx": req.idx, "result": result, **serialize_state(state)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -69,8 +93,8 @@ def play_move(req: MoveRequest):
 def play_mcts(req: MCTSRequest):
     try:
         result = app.state.engine.play_mcts(req.idx, req.simulations, req.c)
-        state = app.state.engine.get_state(req.idx)
-        return {"idx": req.idx, "result": result, "state": repr(state)}
+        state  = app.state.engine.get_state(req.idx)
+        return {"idx": req.idx, "result": result, **serialize_state(state)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -86,7 +110,7 @@ def add_game():
 def get_state(idx: int):
     try:
         state = app.state.engine.get_state(idx)
-        return {"idx": idx, "state": repr(state)}
+        return {"idx": idx, **serialize_state(state)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -110,8 +134,12 @@ def main():
     global config_path
     config_path = args.config
 
-    # Use import string for reload/workers support
+    os.environ["CONFIG_PATH"] = args.config
     uvicorn.run("main:app", host=args.host, port=args.port, reload=args.reload)
 
 if __name__ == "__main__":
     main()
+
+
+
+

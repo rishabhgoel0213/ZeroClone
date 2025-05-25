@@ -12,14 +12,15 @@ def create_init_state():
     return State([[' ' for _ in range(COLS)] for _ in range(ROWS)], 0)
 
 def play_move(state, move):
-    def copy_state(state):
-        return state._replace(board=[row.copy() for row in state.board], turn=1-state.turn)
+    new_board = [row.copy() for row in state.board]
+    turn      = state.turn
 
-    new_state = copy_state(state)
-    for row in reversed(new_state.board):
+    for row in reversed(new_board):
         if row[move[0]] == ' ':
-            row[move[0]] = tokens[new_state.turn]
-            return new_state
+            row[move[0]] = tokens[turn]
+            break
+
+    return state._replace(board=new_board, turn=1-turn)
 
 def check_win(state):
     board = state.board

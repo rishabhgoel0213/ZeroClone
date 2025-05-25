@@ -26,9 +26,9 @@ class Engine:
             self.value = Value(self.config.get('value_function'), **self.config.get('value', {}))
             self.policy = Policy(name=self.config.get('policy_function', None), **self.config.get('policy', {}))
             init_state = self.backend.create_init_state()
-            threads = self.config.get('threads', 1)
-            self.states = [init_state for _ in range(threads)]
-            self.history = [History(states=[init_state], result=None) for _ in range(threads)]
+            self.threads = self.config.get('threads', 1)
+            self.states = [init_state for _ in range(self.threads)]
+            self.history = [History(states=[init_state], result=None) for _ in range(self.threads)]
 
     def add_game(self, init_state=None):
         state = init_state or self.backend.create_init_state()
@@ -96,6 +96,13 @@ class Engine:
 
     def play_mcts(self, idx=0, simulations=1000, c=1.4):
         state = self.states[idx]
+
+        #Safety check
+        terminal_result = self._evaluate(state)
+        if terminal_result is not None:
+            self.history[idx].result = terminal_result
+            return terminal_result
+
         move = core.get_move(state, self.value, self.policy, self.backend, simulations, c)
         return self.play_move(move, idx)
     
@@ -110,6 +117,13 @@ class Engine:
                 idx = futures[future]
                 results[idx] = future.result()
         return results
+    
+    def reset_all_games(self):
+        init_state = self.backend.create_init_state()
+        self.states  = [init_state for _ in range(self.threads)]
+        self.history = [History(states=[init_state], result=None)
+                        for _ in range(self.threads)]
+
         
     def _evaluate(self, state):
         if self.backend.check_win(state):
@@ -117,6 +131,7 @@ class Engine:
         if self.backend.check_draw(state):
             return 0
         return None
+    
             
 
 
