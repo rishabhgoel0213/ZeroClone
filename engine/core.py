@@ -1,10 +1,6 @@
 import math
 import random
 
-
-"""
-Core MCTS logic
-"""
 class Node:
     def __init__(self, state, moves, parent=None, parent_action=None):
         self.state = state

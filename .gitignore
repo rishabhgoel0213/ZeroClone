@@ -3,5 +3,6 @@ game_engine.egg-info/
 build/
 __pycache__/
 *.so
+*.pth
 venv/
 logs/

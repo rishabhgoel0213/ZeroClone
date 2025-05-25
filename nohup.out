@@ -1,6 +1,0 @@
-usage: train_v2.py [-h] -c CONFIG [--cycles CYCLES] [--batch-size BATCH_SIZE]
-                   [--epochs EPOCHS] [--num-workers NUM_WORKERS]
-                   [--games-cap GAMES_CAP] [--sims-cap SIMS_CAP]
-                   [--init-lr INIT_LR] [--lr-decay LR_DECAY]
-                   [--lr-floor LR_FLOOR]
-train_v2.py: error: unrecognized arguments: logs/train_20250525_195206.log

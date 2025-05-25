@@ -4,9 +4,8 @@ import engine.core as core
 from engine.value_functions import Value
 from engine.policy_functions import Policy
 from concurrent.futures import ThreadPoolExecutor
-import torch
 from dataclasses import dataclass, field
-from typing import List, Any, Optional
+from typing import Any, Optional
 
 @dataclass
 class History:
@@ -16,10 +15,6 @@ class History:
 
 class Engine:
     def __init__(self, config):
-        """
-        Creates a game engine based on specified path to a valid configuration file
-        Defines a backend, value function, policy function, number of threads, a states array, and a history array
-        """
         with open(config, 'r') as file:
             self.config = yaml.safe_load(file)
             self.backend = importlib.import_module(f"engine.games.{self.config['game']}.{self.config['backend']}")
