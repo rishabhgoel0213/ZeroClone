@@ -53,7 +53,7 @@ def train_and_save_latest(model_type: str,
 
 def simulate_games(engine: Engine, total_games: int) -> List[int | None]:
     unfinished = set(range(min(total_games, engine.threads)))
-    final: List[int | None] = [None] * total_games
+    final = [None] * min(total_games, engine.threads)
 
     while unfinished:
         sims = engine.config['mcts']['simulations']
@@ -66,6 +66,7 @@ def simulate_games(engine: Engine, total_games: int) -> List[int | None]:
             final[idx] = res
 
             if len(final) < total_games:
+                final += [None]
                 unfinished.add(engine.add_game())
 
     return final

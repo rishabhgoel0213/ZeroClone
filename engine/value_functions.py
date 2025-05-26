@@ -39,31 +39,32 @@ class Value:
         return factor * sum([piece_values.get(chr(p), 0) for p in state.board])
 
     
-
-    def init_network_latest(self):
-        import os
-        import models.core as core
-        import torch
-        module, latest_path = core.get_value_network(self.init_args['model_type'])
-        ValueNetwork = getattr(module, "ValueNetwork")
-        globals_fn = getattr(module, "add_safe_globals")
-        globals_fn()
-        self.model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cpu")
-
+    # ================================================================== #
+    #  Neural-network modes (batched on a background thread)
+    # ================================================================== #
+    def _nn_setup(self, model, batch_size: int):
+        self.model = model
         self.model.to('cuda').eval()
-        self.batch_size = self.init_args.get('batch_size', 1)
-        self._req_queue = queue.Queue()
-        self._worker = threading.Thread(target=self._batch_worker, daemon=True)
-        self._worker.start()
+        self.batch_size = batch_size
+        self._req_q = queue.Queue()
+        t = threading.Thread(target=self._batch_worker, daemon=True)
+        t.start()
+
+    def _nn_forward(self, state, args):
+        arr = args['backend'].state_to_tensor(state)
+        tens = torch.tensor(arr, device='cuda')
+        out_q = queue.Queue()
+        self._req_q.put((tens, out_q))
+        return out_q.get()[0]
 
     def _batch_worker(self):
         while True:
-            tensor, out_q = self._req_queue.get()
+            tensor, out_q = self._req_q.get()
             batch = [(tensor, out_q)]
 
             for _ in range(self.batch_size - 1):
                 try:
-                    tup = self._req_queue.get_nowait()
+                    tup = self._req_q.get_nowait()
                     batch.append(tup)
                 except queue.Empty:
                     break      
@@ -77,10 +78,35 @@ class Value:
             for out_q, out in zip(out_queues, outputs):
                 out_q.put(out)
 
+
+
+
+    def init_network_latest(self):
+        import os
+        import models.core as core
+        import torch
+        module, latest_path = core.get_value_network(self.init_args['model_type'])
+        ValueNetwork = getattr(module, "ValueNetwork")
+        globals_fn = getattr(module, "add_safe_globals")
+        globals_fn()
+        model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cpu")
+        self._nn_setup(model, self.init_args.get('batch_size', 1))
+
     def network_latest(self, state, args):
-        arr = args['backend'].state_to_tensor(state)
-        tensor = torch.tensor(arr, device='cuda')
-        resp_q = queue.Queue()
-        self._req_queue.put((tensor, resp_q))
-        return resp_q.get()[0]
+        self._nn_forward(state, args)
+
+
+    
+    def init_network_at_path(self):
+        import os, models.core as core
+        path = self.init_args['path']
+        module, _ = core.get_value_network(self.init_args['model_type'])
+        getattr(module, "add_safe_globals")()
+        ValueNetwork = getattr(module, "ValueNetwork")
+
+        model = ValueNetwork() if not os.path.exists(path) else torch.load(path, map_location='cpu')
+        self._nn_setup(model, self.init_args.get('batch_size', 1))
+    
+    def network_at_path(self, state, args):
+        self._nn_forward(state, args)
         

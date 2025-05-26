@@ -5,26 +5,43 @@ from engine.value_functions import Value
 from engine.policy_functions import Policy
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, Sequence, Callable
 
 @dataclass
 class History:
     states: list[Any] = field(default_factory=list)
     result: Optional[int] = None
 
-
 class Engine:
-    def __init__(self, config):
-        with open(config, 'r') as file:
-            self.config = yaml.safe_load(file)
-            self.backend = importlib.import_module(f"engine.games.{self.config['game']}.{self.config['backend']}")
-            self.value = Value(self.config.get('value_function'), **self.config.get('value', {}))
-            self.policy = Policy(name=self.config.get('policy_function', None), **self.config.get('policy', {}))
-            init_state = self.backend.create_init_state()
-            self.threads = self.config.get('threads', 1)
-            self.states = [init_state for _ in range(self.threads)]
-            self.history = [History(states=[init_state], result=None) for _ in range(self.threads)]
+    # ---------------------------------------------------------------------
+    #  Construction
+    # ---------------------------------------------------------------------
+    def __init__(self, config: str | dict, *, value_functions: Sequence[Callable] | None = None):
+        if isinstance(config, str):
+            with open(config, 'r') as file:
+                self.config = yaml.safe_load(file)
+        else:
+            self.config = config
 
+        self.backend = importlib.import_module(f"engine.games.{self.config['game']}.{self.config['backend']}")
+        self.policy = Policy(name=self.config.get("policy_functions"), **self.config.get("policy", {}))
+
+        if value_functions is None:
+            val = Value(self.config.get('value_function'), **self.config.get('value', {}))
+            self.values = [val, val]
+        else:
+            if len(value_functions) != 2:
+                raise ValueError("value_functions must have length 2")
+            self.values = list(value_functions)
+
+        init_state = self.backend.create_init_state()
+        self.threads = self.config.get('threads', 1)
+        self.states = [init_state for _ in range(self.threads)]
+        self.history = [History(states=[init_state], result=None) for _ in range(self.threads)]
+
+    # ---------------------------------------------------------------------
+    #  Basic Functions
+    # ---------------------------------------------------------------------
     def add_game(self, init_state=None):
         state = init_state or self.backend.create_init_state()
         self.states.append(state)
@@ -37,6 +54,9 @@ class Engine:
     def get_hist(self, idx=0):
         return list(self.history[idx])
     
+    # ------------------------------------------------------------------
+    #  Dataset Helper
+    # ------------------------------------------------------------------
     def get_dataset(self):
         import numpy as np
         state_arrays = []
@@ -68,6 +88,9 @@ class Engine:
 
         return states_np, results_np
 
+    # ------------------------------------------------------------------
+    #  Game‑play Helpers
+    # ------------------------------------------------------------------
     def play_move(self, move, idx=0):
         new_state = self.backend.play_move(self.states[idx], move)
         self.states[idx] = new_state
@@ -80,10 +103,7 @@ class Engine:
     def play_moves_parallel(self, moves, max_workers=None):
         results = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {
-                executor.submit(self.play_move, mv, idx): idx
-                for idx, mv in moves.items()
-            }
+            futures = {executor.submit(self.play_move, mv, idx): idx for idx, mv in moves.items()}
             for future in futures:
                 idx = futures[future]
                 results[idx] = future.result()
@@ -92,13 +112,13 @@ class Engine:
     def play_mcts(self, idx=0, simulations=1000, c=1.4):
         state = self.states[idx]
 
-        #Safety check
         terminal_result = self._evaluate(state)
         if terminal_result is not None:
             self.history[idx].result = terminal_result
             return terminal_result
 
-        move = core.get_move(state, self.value, self.policy, self.backend, simulations, c)
+        value_fn = self.values[state.turn]
+        move = core.get_move(state, value_fn, self.policy, self.backend, simulations, c)
         return self.play_move(move, idx)
     
     def play_mcts_parallel(self, idxs, simulations=1000, c=1.4, max_workers=None):        
@@ -116,10 +136,11 @@ class Engine:
     def reset_all_games(self):
         init_state = self.backend.create_init_state()
         self.states  = [init_state for _ in range(self.threads)]
-        self.history = [History(states=[init_state], result=None)
-                        for _ in range(self.threads)]
+        self.history = [History(states=[init_state], result=None) for _ in range(self.threads)]
 
-        
+    # ------------------------------------------------------------------
+    #  Internal Helpers
+    # ------------------------------------------------------------------
     def _evaluate(self, state):
         if self.backend.check_win(state):
             return state.turn * 2 - 1
