@@ -46,7 +46,7 @@ class Value:
     # ================================================================== #
     def _nn_setup(self, model, batch_size: int):
         self.model = model
-        self.model.to('cuda').eval()
+        self.model.to(device='cuda', dtype=torch.float16).eval()
         self.batch_size = batch_size
         self._req_q = queue.Queue()
         t = threading.Thread(target=self._batch_worker, daemon=True)
@@ -55,6 +55,7 @@ class Value:
     def _nn_forward(self, state, args):
         arr = args['backend'].state_to_tensor(state)
         tens = torch.tensor(arr, device='cuda')
+        tens = tens.half()
         out_q = queue.Queue()
         self._req_q.put((tens, out_q))
         return out_q.get()[0]

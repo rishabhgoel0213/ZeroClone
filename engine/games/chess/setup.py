@@ -9,6 +9,8 @@ ext = Extension(
   extra_compile_args=[
     "-O3",
     "-march=native",
+    "-funroll-loops",
+    "-ffast-math"
 ],
 )
 setup(
