@@ -22,6 +22,7 @@ def simulate(engine: Engine, total: int) -> Sequence[int]:
 
         for idx in list(unfinished):
             if partial[idx] is not None:
+                print("Game finished")
                 results[idx] = partial[idx]
                 unfinished.remove(idx)
                 if len(results) < total:

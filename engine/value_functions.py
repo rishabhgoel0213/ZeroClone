@@ -13,7 +13,9 @@ class Value:
     def __call__(self, state, **kwargs):
         method_ref = getattr(self, self.name)
         return method_ref(state, self.init_args | kwargs)
-
+    
+    def batch(self, states, **kwargs):
+        return [self(state, **kwargs) for state in states]
 
 
     def random_rollout(self, state, args):
@@ -93,7 +95,7 @@ class Value:
         self._nn_setup(model, self.init_args.get('batch_size', 1))
 
     def network_latest(self, state, args):
-        self._nn_forward(state, args)
+        return self._nn_forward(state, args)
 
 
     
@@ -108,5 +110,5 @@ class Value:
         self._nn_setup(model, self.init_args.get('batch_size', 1))
     
     def network_at_path(self, state, args):
-        self._nn_forward(state, args)
+        return self._nn_forward(state, args)
         

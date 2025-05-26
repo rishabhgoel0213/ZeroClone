@@ -48,11 +48,31 @@ def backprop(node, result):
         parent.Qa[a] = parent.Wa[a] / parent.Na[a]
         backprop(parent, -result)
 
-def get_move(state, value, policy, backend, simulations=1000, c=1.4):
+def get_move(state, value, policy, backend, simulations=1000, c=1.4, batch_size=32):
     root = Node(state, backend.get_legal_moves(state))
+
+    pending_nodes = []
+    pending_states = []
+
+    def flush():
+        if not pending_nodes:
+            return
+        values = value.batch(pending_states, backend=backend)
+        for node, v in zip(pending_nodes, values):
+            backprop(node, v)
+        pending_nodes.clear()
+        pending_states.clear()
+
     for _ in range(simulations):
         node = select(root, c)
         leaf = expand(node, backend, policy) if node.untried_moves else node
-        result = value(leaf.state, backend=backend)
-        backprop(leaf, result)
-    return max(root.children.items(), key=lambda x: x[1].N)[0]
+
+        pending_nodes.append(leaf)
+        pending_states.append(leaf.state)
+
+        if len(pending_nodes) >= batch_size:
+            flush()
+
+    flush()
+
+    return max(root.children.items(), key=lambda kv: kv[1].N)[0]
