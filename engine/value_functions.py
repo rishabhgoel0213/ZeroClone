@@ -15,7 +15,19 @@ class Value:
         return method_ref(state, self.init_args | kwargs)
     
     def batch(self, states, **kwargs):
-        return [self(state, **kwargs) for state in states]
+        if not hasattr(self, "_req_q"):
+            return [self(state, **kwargs) for state in states]
+
+        backend = kwargs["backend"]
+        out_qs  = []
+        for s in states:
+            tens = torch.tensor(backend.state_to_tensor(s), device='cuda', dtype=torch.float16)
+            q = queue.Queue()
+            self._req_q.put((tens, q))
+            out_qs.append(q)
+
+        return [q.get()[0] for q in out_qs] 
+
 
 
     def random_rollout(self, state, args):

@@ -11,6 +11,14 @@ from torch.utils.data import DataLoader
 from engine.engine import Engine
 import models.core as core
 
+import time, contextlib
+
+@contextlib.contextmanager
+def timer(label):
+    t0 = time.time()
+    yield
+    print(f"{label:<20} : {time.time()-t0:6.2f} s")
+
 
 def train_and_save_latest(model_type: str,
                           states: torch.Tensor,
@@ -113,13 +121,16 @@ def full_training_run(config_path: str,
         engine.config['mcts']['c_puct'] = hp['c_puct']
 
         print(f"▶ Self‑play: {hp['games']} games  ({hp['simulations']} sims | c={hp['c_puct']:.2f})")
-        simulate_games(engine, hp['games'])
+        with timer("SELF-PLAY"):
+            simulate_games(engine, hp['games'])
 
-        states, values = engine.get_dataset()
+        with timer("DATASET BUILD"):
+            states, values = engine.get_dataset()
         print(f"Collected {len(values)} training positions")
 
         print(f"▶ Training: {epochs} epochs | lr={hp['lr']:.2e}")
-        train_and_save_latest(engine.config['value']['model_type'], states, values, epochs=epochs, lr=hp['lr'], batch_size=batch_size, num_workers=num_workers)
+        with timer("TRAIN"):
+            train_and_save_latest(engine.config['value']['model_type'], states, values, epochs=epochs, lr=hp['lr'], batch_size=batch_size, num_workers=num_workers)
 
     print("\n…Training campaign complete – latest model saved!…")
 
@@ -143,7 +154,4 @@ if __name__ == "__main__":
 
     args = ap.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[1]
-    cfg_path  = repo_root / "configs" / f"{args.config}.yaml"
-
-    full_training_run(str(cfg_path), cycles=args.cycles, batch_size=args.batch_size, epochs=args.epochs, num_workers=args.num_workers, games_cap=args.games_cap, sims_cap=args.sims_cap, init_lr=args.init_lr, lr_decay=args.lr_decay, lr_floor=args.lr_floor)
+    full_training_run(args.config, cycles=args.cycles, batch_size=args.batch_size, epochs=args.epochs, num_workers=args.num_workers, games_cap=args.games_cap, sims_cap=args.sims_cap, init_lr=args.init_lr, lr_decay=args.lr_decay, lr_floor=args.lr_floor)

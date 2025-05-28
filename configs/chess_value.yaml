@@ -8,4 +8,4 @@ mcts:
   c_puct: 1.4
 value:
   model_type: chess_value
-  batch_size: 4
+  batch_size: 256

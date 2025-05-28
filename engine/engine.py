@@ -68,7 +68,7 @@ class Engine:
             if final_result is None:
                 continue
 
-            factor = -1
+            factor = 0 if final_result == 0 else -1
             label_entry = []
             for state in states_seq:
                 arr = self.backend.state_to_tensor(state)
@@ -84,7 +84,7 @@ class Engine:
             return empty_states, empty_labels
         
         states_np = np.stack(state_arrays, axis=0)
-        results_np = np.array(labels, dtype=np.int64)
+        results_np = np.array(labels, dtype=np.float32)
 
         return states_np, results_np
 
