@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-Self-play + value-net trainer with automatic logfile tee.
-
-Changes:
-• All stdout / stderr are now duplicated to
-  logs/train_<timestamp>.log (directory is auto-created).
-• Nothing else in the public interface changed – existing CLI
-  flags still work exactly the same.
-"""
-
 from __future__ import annotations
 
 import argparse

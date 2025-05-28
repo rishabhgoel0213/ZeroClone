@@ -1,24 +1,3 @@
-#!/usr/bin/env python3
-"""
-ZeroClone – simple training process manager / viewer.
-
-Usage
------
-
-▶ Launch a new background run (detached):
-
-    python scripts/train_manager.py -c configs/connect4.yaml -- <extra train.py flags>
-
-The manager:
-  • Starts `train.py` in its own process group (`setsid`),
-  • Returns immediately, showing the PID and newest log file.
-
-▶ Live-view the latest (or a specific) run:
-
-    python scripts/train_manager.py --view               # auto-picks newest log
-    python scripts/train_manager.py --view -l logs/train_20250528_120501.log
-"""
-
 from __future__ import annotations
 
 import argparse
