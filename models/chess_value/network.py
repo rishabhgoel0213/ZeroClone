@@ -57,6 +57,7 @@ def train(model, dataloader, epochs=10, lr=1e-3, device='cuda'):
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss()
 
+    loss = 0
     for epoch in range(1, epochs + 1):
         model.train()
         running_loss = 0.0
@@ -73,4 +74,6 @@ def train(model, dataloader, epochs=10, lr=1e-3, device='cuda'):
             running_loss += loss.item() * states.size(0)
 
         avg_loss = running_loss / len(dataloader.dataset)
+        loss += avg_loss
         print(f"Epoch {epoch}/{epochs} — Loss: {avg_loss:.4f}")
+    return loss / epochs

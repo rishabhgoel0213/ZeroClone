@@ -21,12 +21,13 @@ class Value:
         backend = kwargs["backend"]
         out_qs  = []
         for s in states:
-            tens = torch.tensor(backend.state_to_tensor(s), device='cuda', dtype=torch.float16)
-            q = queue.Queue()
-            self._req_q.put((tens, q))
+            arr = backend.state_to_tensor(s)
+            q   = queue.Queue()
+            self._req_q.put((arr, q))
             out_qs.append(q)
 
-        return [q.get()[0] for q in out_qs] 
+        return [q.get()[0] for q in out_qs]
+
 
 
 
@@ -74,26 +75,26 @@ class Value:
 
     def _batch_worker(self):
         while True:
-            tensor, out_q = self._req_q.get()
-            batch = [(tensor, out_q)]
+            arr, out_q = self._req_q.get()
+            batch = [(arr, out_q)]
 
             for _ in range(self.batch_size - 1):
                 try:
-                    tup = self._req_q.get_nowait()
-                    batch.append(tup)
+                    batch.append(self._req_q.get_nowait())
                 except queue.Empty:
-                    break      
-                      
-            tensors, out_queues = zip(*batch)
-            batch_tensor = torch.stack(tensors, dim=0)
+                    break
+
+            import numpy as np
+
+            arrays, out_queues = zip(*batch)
+            batch_np = np.stack(arrays, axis=0)  
+            batch_tensor = torch.from_numpy(batch_np).to(device="cuda", dtype=torch.float16)
 
             with torch.no_grad():
                 outputs = self.model(batch_tensor).cpu().tolist()
 
-            for out_q, out in zip(out_queues, outputs):
-                out_q.put(out)
-
-
+            for q, out in zip(out_queues, outputs):
+                q.put(out)
 
 
     def init_network_latest(self):

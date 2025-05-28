@@ -11,7 +11,17 @@ from torch.utils.data import DataLoader
 from engine.engine import Engine
 import models.core as core
 
-import time, contextlib
+import contextlib
+
+import csv, sys, time
+CSV_WRITER = csv.writer(sys.stdout, lineterminator="\n")
+
+def emit_stats(**kv):
+    now = int(time.time())
+    keys = ["ts"] + sorted(kv)
+    values = [now] + [kv[k] for k in sorted(kv)]
+    CSV_WRITER.writerow(values)
+    sys.stdout.flush()
 
 @contextlib.contextmanager
 def timer(label):
@@ -46,7 +56,7 @@ def train_and_save_latest(model_type: str,
         model = ValueNetwork()
         print("No previous model – created new network instance")
 
-    train_fn(model, loader, epochs, lr)
+    avg_loss = train_fn(model, loader, epochs, lr)
 
     checkpoint_dir = Path(latest_path).parent / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -57,9 +67,10 @@ def train_and_save_latest(model_type: str,
 
     torch.save(model, latest_path)
     print("Saved new *latest* model to", latest_path)
+    return avg_loss
 
 
-def simulate_games(engine: Engine, total_games: int) -> List[int | None]:
+def simulate_games(engine: Engine, total_games: int, current_cycle: int) -> List[int | None]:
     unfinished = set(range(min(total_games, engine.threads)))
     final = [None] * min(total_games, engine.threads)
 
@@ -72,6 +83,8 @@ def simulate_games(engine: Engine, total_games: int) -> List[int | None]:
         for res, idx in finished_now:
             unfinished.remove(idx)
             final[idx] = res
+            emit_stats(stage="game_done", cycle=current_cycle, finished=sum(r is not None for r in final), target=total_games)
+
 
             if len(final) < total_games:
                 final += [None]
@@ -109,30 +122,26 @@ def full_training_run(config_path: str,
 
     engine = Engine(config_path)
 
+    loss = 0
     for cycle in range(cycles):
-        print("\n============================")
-        print(f" CYCLE {cycle + 1}/{cycles}")
-        print("============================")
-
         engine.reset_all_games()
 
         hp = schedule_hyperparams(cycle, games_cap=games_cap, sims_cap=sims_cap, init_lr=init_lr, lr_decay=lr_decay, lr_floor=lr_floor)
         engine.config['mcts']['simulations'] = hp['simulations']
         engine.config['mcts']['c_puct'] = hp['c_puct']
 
-        print(f"▶ Self‑play: {hp['games']} games  ({hp['simulations']} sims | c={hp['c_puct']:.2f})")
+        emit_stats(stage="cycle_start", cycle=cycle+1, total_cycles=cycles, games_target=hp["games"], sims=hp["simulations"])
         with timer("SELF-PLAY"):
-            simulate_games(engine, hp['games'])
+            simulate_games(engine, hp['games'], cycle)
 
         with timer("DATASET BUILD"):
             states, values = engine.get_dataset()
         print(f"Collected {len(values)} training positions")
 
-        print(f"▶ Training: {epochs} epochs | lr={hp['lr']:.2e}")
         with timer("TRAIN"):
-            train_and_save_latest(engine.config['value']['model_type'], states, values, epochs=epochs, lr=hp['lr'], batch_size=batch_size, num_workers=num_workers)
+            loss += train_and_save_latest(engine.config['value']['model_type'], states, values, epochs=epochs, lr=hp['lr'], batch_size=batch_size, num_workers=num_workers)
 
-    print("\n…Training campaign complete – latest model saved!…")
+    emit_stats(stage="train_done", cycle=cycle+1, loss=loss/cycles, epochs=epochs)
 
 
 if __name__ == "__main__":
