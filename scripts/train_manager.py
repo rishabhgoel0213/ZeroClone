@@ -31,20 +31,6 @@ def _start_training(cmd: list[str]) -> Tuple[subprocess.Popen, Optional[Path]]:
     return proc, (new_logs[-1] if new_logs else None)
 
 
-# ──────────────────────────────────────────────────────────────────────────
-#  Helper – stream structured progress from a log
-# ──────────────────────────────────────────────────────────────────────────
-def _follow(fp):
-    """Generator that yields appended lines (tail -f)."""
-    fp.seek(0, os.SEEK_END)
-    while True:
-        line = fp.readline()
-        if not line:
-            time.sleep(0.25)
-            continue
-        yield line.rstrip("\n")
-
-
 def _parse_stats_row(row: list[str]) -> tuple[str, dict]:
     stage_idx = next((i for i, v in enumerate(row) if not v.replace(".", "", 1).isdigit()), None)
     if stage_idx is None:
@@ -75,7 +61,7 @@ def _parse_stats_row(row: list[str]) -> tuple[str, dict]:
 
     except (ValueError, IndexError):
         pass
-
+    
     return stage, info
 
 
