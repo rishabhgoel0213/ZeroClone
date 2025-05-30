@@ -124,10 +124,7 @@ class Engine:
     def play_mcts_parallel(self, idxs, simulations=1000, c=1.4, max_workers=None):        
         results = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {
-                executor.submit(self.play_mcts, idx, simulations, c): idx
-                for idx in idxs
-            }
+            futures = {executor.submit(self.play_mcts, idx, simulations, c): idx for idx in idxs}
             for future in futures:
                 idx = futures[future]
                 results[idx] = future.result()

@@ -4,7 +4,7 @@ value_function: network_latest
 policy_function: random
 threads: 6
 mcts:
-  simulations: 1000
+  simulations: 100
   c_puct: 1.4
 value:
   model_type: chess_value
