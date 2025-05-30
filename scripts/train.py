@@ -25,7 +25,7 @@ def _init_logfile() -> Path:
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_path = log_dir / f"train_{ts}.log"
 
-    class _Tee:  # simple tee
+    class _Tee:
         def __init__(self, *streams):
             self._streams = streams
         def write(self, data):
@@ -90,7 +90,7 @@ def train_and_save_latest(
     train_fn = getattr(module, "train")
 
     if Path(latest_path).exists():
-        model = torch.load(latest_path, map_location="cpu")
+        model = torch.load(latest_path, map_location="cuda")
         print("Loaded existing net from", latest_path)
     else:
         model = ValueNetwork()

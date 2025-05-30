@@ -29,8 +29,6 @@ class Value:
         return [q.get()[0] for q in out_qs]
 
 
-
-
     def random_rollout(self, state, args):
         import random
         backend = args['backend']
@@ -38,8 +36,8 @@ class Value:
         while not backend.check_win(state) and not backend.check_draw(state):
             state = backend.play_move(state, random.choice(list(backend.get_legal_moves(state))))
         if backend.check_win(state):
-            winner = state.turn
-            return 1 if winner == inital_turn else -1
+            loser = state.turn
+            return -1 if loser == inital_turn else 1
         else:
             return 0
 
@@ -50,7 +48,7 @@ class Value:
         if backend.check_win(state):
             return 1000
         piece_values = {'P': 1, 'N': 3, 'B': 3, 'R': 5, 'Q': 9, 'p': -1, 'n': -3, 'b': -3, 'r': -5, 'q': -9}
-        factor = state.turn * 2 - 1
+        factor = state.turn * -2 + 1
         return factor * sum([piece_values.get(chr(p), 0) for p in state.board])
 
     
@@ -105,7 +103,7 @@ class Value:
         ValueNetwork = getattr(module, "ValueNetwork")
         globals_fn = getattr(module, "add_safe_globals")
         globals_fn()
-        model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cpu")
+        model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cuda")
         self._nn_setup(model, self.init_args.get('batch_size', 1))
 
     def network_latest(self, state, args):
@@ -120,7 +118,7 @@ class Value:
         getattr(module, "add_safe_globals")()
         ValueNetwork = getattr(module, "ValueNetwork")
 
-        model = ValueNetwork() if not os.path.exists(path) else torch.load(path, map_location='cpu')
+        model = ValueNetwork() if not os.path.exists(path) else torch.load(path, map_location='cuda')
         self._nn_setup(model, self.init_args.get('batch_size', 1))
     
     def network_at_path(self, state, args):

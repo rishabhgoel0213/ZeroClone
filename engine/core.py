@@ -44,7 +44,7 @@ def backprop(node, result):
         parent = node.parent
         a = node.parent_action
         parent.Na[a] += 1
-        parent.Wa[a] += result
+        parent.Wa[a] -= result
         parent.Qa[a] = parent.Wa[a] / parent.Na[a]
         backprop(parent, -result)
 
