@@ -24,14 +24,7 @@ import models.core as core
 _REPLAY_STATES: list[np.ndarray] = []
 _REPLAY_VALUES: list[np.ndarray] = []
 
-def _update_replay \
-(
-    states_new: np.ndarray,
-    values_new: np.ndarray,
-    *,
-    frac_old: float = 0.30,
-) -> tuple[np.ndarray, np.ndarray]:
-
+def _update_replay(states_new: np.ndarray, values_new: np.ndarray, *, frac_old: float = 0.30) -> tuple[np.ndarray, np.ndarray]:
     if not _REPLAY_STATES:
         _REPLAY_STATES.append(states_new)
         _REPLAY_VALUES.append(values_new)
