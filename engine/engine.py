@@ -91,7 +91,14 @@ class Engine:
     # ------------------------------------------------------------------
     #  Game‑play Helpers
     # ------------------------------------------------------------------
+    def legal_moves(self, idx=0):
+        state = self.states[idx]
+        return self.backend.get_legal_moves(state)
+
     def play_move(self, move, idx=0):
+        if not self._is_legal(move, idx):
+            raise ValueError("Illegal move")
+        
         new_state = self.backend.play_move(self.states[idx], move)
         self.states[idx] = new_state
 
@@ -144,6 +151,10 @@ class Engine:
         if self.backend.check_draw(state):
             return 0
         return None
+    
+    def _is_legal(self, mv, idx=0) -> bool:
+        fr, fc, tr, tc = mv[0] 
+        return any(legal[0] == (fr, fc, tr, tc) for legal in self.legal_moves(idx))
     
             
 

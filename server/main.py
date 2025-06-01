@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-FastAPI server for interacting with the game engine.
-
-Endpoints:
-- POST /play_move: play a user move on a specific game instance
-- POST /play_mcts: play a move via the MCTS bot on a specific game instance
-- POST /add_game: add a new game instance and receive its index
-- GET  /state/{idx}: fetch the current state of a specific game instance
-"""
-
 import argparse
 import os
 import collections
@@ -23,11 +12,6 @@ from engine.engine import Engine
 
 # === Game-agnostic state serializer ===
 def serialize_state(s: object) -> dict:
-    """
-    Turn any backend State object into a dict of primitives/lists.
-    - If it has .board, dump that (list or nested list).
-    - If it has simple attrs (turn, etc), include those.
-    """
     out = {}
     # 1) board
     if hasattr(s, 'board'):
@@ -79,13 +63,26 @@ class MCTSRequest(BaseModel):
     simulations: int = 1000
     c: float = 1.4
 
+@app.get("/legal_moves/{idx}")
+def legal_moves(idx: int):
+    try:
+        moves = app.state.engine.legal_moves(idx)
+        return {"idx": idx, "moves": [[*m[0]] for m in moves]}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.post("/play_move")
 def play_move(req: MoveRequest):
     try:
-        move = (req.move, 0)
-        result = app.state.engine.play_move(move, req.idx)
+        coords = tuple(req.move)
+        legal_mv = next((mv for mv in app.state.engine.legal_moves(req.idx) if mv[0] == coords), None)
+        if legal_mv is None:
+            raise ValueError("Illegal move")
+
+        result = app.state.engine.play_move(legal_mv, req.idx)
         state  = app.state.engine.get_state(req.idx)
         return {"idx": req.idx, "result": result, **serialize_state(state)}
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

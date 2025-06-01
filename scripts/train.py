@@ -12,9 +12,22 @@ from typing import Any, Dict, List
 
 import torch
 from torch.utils.data import DataLoader
+import numpy as np
 
 from engine.engine import Engine
 import models.core as core
+
+
+# ──────────────────────────────────────────────────────────────────────────
+#  Global replay buffer
+# ──────────────────────────────────────────────────────────────────────────
+_REPLAY_STATES: list[np.ndarray] = []
+_REPLAY_VALUES: list[np.ndarray] = []
+
+def _update_replay(states: np.ndarray, values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    _REPLAY_STATES.append(states)
+    _REPLAY_VALUES.append(values)
+    return (np.concatenate(_REPLAY_STATES,  axis=0), np.concatenate(_REPLAY_VALUES, axis=0),)
 
 # ──────────────────────────────────────────────────────────────────────────
 #  Logging helper – duplicate stdout/stderr to a timestamped file
@@ -68,7 +81,8 @@ def timer(label):
 # ──────────────────────────────────────────────────────────────────────────
 #  NN training helper
 # ──────────────────────────────────────────────────────────────────────────
-def train_and_save_latest(
+def train_and_save_latest \
+(
     model_type: str,
     states: torch.Tensor,
     values: torch.Tensor,
@@ -190,8 +204,9 @@ def full_training_run \
             simulate_games(engine, hp["games"], cycle + 1)
 
         with timer("DATASET BUILD"):
-            states, values = engine.get_dataset()
-        print(f"Collected {len(values)} training positions")
+            states_now, values_now = engine.get_dataset()
+        states, values = _update_replay(states_now, values_now)
+        print(f"Replay buffer : {len(values):,} positions total (+{len(values_now)} this cycle)")
 
         with timer("TRAIN"):
             loss_acc += train_and_save_latest \
