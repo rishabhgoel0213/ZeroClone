@@ -18,16 +18,43 @@ from engine.engine import Engine
 import models.core as core
 
 
-# ──────────────────────────────────────────────────────────────────────────
-#  Global replay buffer
-# ──────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────
+#  Replay-buffer helper – all fresh data + % of the older pool
+# ────────────────────────────────────────────────────────────────────────
 _REPLAY_STATES: list[np.ndarray] = []
 _REPLAY_VALUES: list[np.ndarray] = []
 
-def _update_replay(states: np.ndarray, values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    _REPLAY_STATES.append(states)
-    _REPLAY_VALUES.append(values)
-    return (np.concatenate(_REPLAY_STATES,  axis=0), np.concatenate(_REPLAY_VALUES, axis=0),)
+def _update_replay \
+(
+    states_new: np.ndarray,
+    values_new: np.ndarray,
+    *,
+    frac_old: float = 0.30,
+) -> tuple[np.ndarray, np.ndarray]:
+
+    if not _REPLAY_STATES:
+        _REPLAY_STATES.append(states_new)
+        _REPLAY_VALUES.append(values_new)
+        return states_new, values_new
+
+    old_states = np.concatenate(_REPLAY_STATES, axis=0)
+    old_values = np.concatenate(_REPLAY_VALUES, axis=0)
+
+    k = int(frac_old * len(old_states))
+    if k > 0:
+        idx = np.random.choice(len(old_states), k, replace=False)
+        sample_states = old_states[idx]
+        sample_values = old_values[idx]
+    else:
+        sample_states = old_states[:0]
+        sample_values = old_values[:0]
+
+    _REPLAY_STATES.append(states_new)
+    _REPLAY_VALUES.append(values_new)
+
+    train_states = np.concatenate([sample_states, states_new], axis=0)
+    train_values = np.concatenate([sample_values, values_new], axis=0)
+    return train_states, train_values
 
 # ──────────────────────────────────────────────────────────────────────────
 #  Logging helper – duplicate stdout/stderr to a timestamped file
