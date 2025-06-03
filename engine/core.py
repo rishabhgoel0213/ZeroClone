@@ -3,7 +3,7 @@ import random
 
 try:
     from .mcts_cpp import get_move as _cpp_get_move
-except Exception:  # pragma: no cover - extension optional
+except Exception:
     _cpp_get_move = None
 
 class _PyNode:
@@ -88,5 +88,6 @@ def get_move(state, value, policy, backend, simulations=1000, c=1.4, batch_size=
         try:
             return _cpp_get_move(state, value, policy, backend, simulations, c, batch_size)
         except Exception:
+            print("CPP NOT WORKING")
             pass
     return _get_move_python(state, value, policy, backend, simulations, c, batch_size)

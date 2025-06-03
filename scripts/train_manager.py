@@ -59,7 +59,7 @@ def _parse_stats_row(row: list[str]) -> tuple[str, dict]:
             info["epochs"] = int(row[2])
             info["loss"]   = float(row[3])
 
-    except (ValueError, IndexError):
+    except (ValueError, IndexError, KeyError):
         pass
     
     return stage, info
