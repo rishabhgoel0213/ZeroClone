@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 import argparse
 import csv
 import os
@@ -147,7 +148,7 @@ def view_log(log_path: Path) -> None:
                     elif stage == "train_done":
                         print("\n\n🎉  Training run complete!\n")
                         break
-                    
+
                 except (ValueError, IndexError, KeyError):
                     pass
 
