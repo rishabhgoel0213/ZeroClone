@@ -59,7 +59,7 @@ def _parse_stats_row(row: list[str]) -> tuple[str, dict]:
             info["epochs"] = int(row[2])
             info["loss"]   = float(row[3])
 
-    except (ValueError, IndexError):
+    except (ValueError, IndexError, KeyError):
         pass
     
     return stage, info
@@ -121,31 +121,35 @@ def view_log(log_path: Path) -> None:
                 stage, info = _parse_stats_row(row)
                 if not stage:
                     continue
-
-                if stage == "cycle_start":
-                    current_cycle = info["cycle"]
-                    target        = info["games_target"]
-                    finished      = 0
-                    print(f"\n▶ Cycle {current_cycle}  –  target {target} games")
-
-                elif stage == "game_done":
-                    if current_cycle is None:
+                
+                try:
+                    if stage == "cycle_start":
                         current_cycle = info["cycle"]
-                        target        = info["target"]
+                        target        = info["games_target"]
                         finished      = 0
-                        print(f"\n▶ Cycle {current_cycle}   target {target} games")
+                        print(f"\n▶ Cycle {current_cycle}  –  target {target} games")
 
-                    if info["cycle"] != current_cycle:
-                        continue
+                    elif stage == "game_done":
+                        if current_cycle is None:
+                            current_cycle = info["cycle"]
+                            target        = info["target"]
+                            finished      = 0
+                            print(f"\n▶ Cycle {current_cycle}   target {target} games")
 
-                    finished = info["finished"]
-                    target   = info["target"]
-                    pct      = 100.0 * finished / max(1, target)
-                    print(f"\r   progress: {finished}/{target}  ({pct:.1f}% )", end="", flush=True)
+                        if info["cycle"] != current_cycle:
+                            continue
 
-                elif stage == "train_done":
-                    print("\n\n🎉  Training run complete!\n")
-                    break
+                        finished = info["finished"]
+                        target   = info["target"]
+                        pct      = 100.0 * finished / max(1, target)
+                        print(f"\r   progress: {finished}/{target}  ({pct:.1f}% )", end="", flush=True)
+
+                    elif stage == "train_done":
+                        print("\n\n🎉  Training run complete!\n")
+                        break
+
+                except (ValueError, IndexError, KeyError):
+                    pass
 
 # ──────────────────────────────────────────────────────────────────────────
 #  CLI

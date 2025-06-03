@@ -28,6 +28,13 @@ for dir in "$ROOT_DIR"/*/; do
     fi
 done
 
+echo -n "Building mcts_cpp"
+if bash "engine/mcts_cpp/build.sh" > /dev/null 2>&1; then
+    echo -e "${GREEN} SUCCESS${RESET}"
+else
+    echo -e "${RED} FAILED${RESET}"
+fi
+
 
 pip install -e .
 

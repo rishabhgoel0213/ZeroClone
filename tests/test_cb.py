@@ -1,4 +1,8 @@
 import pytest
+import os, sys, subprocess, importlib
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+subprocess.run([sys.executable, 'setup.py', 'build_ext', '--inplace'], cwd=os.path.join('engine','games','chess'), check=True)
+importlib.invalidate_caches()
 from engine.games.chess import chess_backend as backend
 
 def print_board_from_fen(fen: str) -> None:
