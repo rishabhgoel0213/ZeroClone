@@ -83,11 +83,9 @@ def _get_move_python(state, value, policy, backend, simulations=1000, c=1.4, bat
     return max(root.children.items(), key=lambda kv: kv[1].N)[0]
 
 def get_move(state, value, policy, backend, simulations=1000, c=1.4, batch_size=32):
-    """Return best move using either C++ or Python implementation."""
     if _cpp_get_move is not None:
         try:
             return _cpp_get_move(state, value, policy, backend, simulations, c, batch_size)
         except Exception:
-            print("CPP NOT WORKING")
             pass
     return _get_move_python(state, value, policy, backend, simulations, c, batch_size)
