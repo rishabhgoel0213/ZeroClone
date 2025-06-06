@@ -26,8 +26,8 @@ The framework is modular—new games can be added by implementing a small backen
 ### 1. Self-Play & Training
 
 ```bash
-python scripts/train.py -c connect4    # Connect Four config
-python scripts/train.py -c chess_value # Chess config
+python scripts/train.py -c configs/connect4.yaml    # Connect Four config
+python scripts/train.py -c configs/chess_value.yaml # Chess config
 ```
 
 Tweak MCTS sims, network depth, etc. in the corresponding `configs/*.yaml`.
@@ -53,7 +53,7 @@ curl -X POST http://localhost:8000/add_game                  # -> {"idx":0}
 
 curl -X POST http://localhost:8000/play_move \
      -H "Content-Type: application/json" \
-     -d '{"idx": 0, "move": [3, 0]}'                         # play column 3
+     -d '{"idx": 0, "move": 3}'                         # play column 3
 
 curl -X POST http://localhost:8000/play_mcts \
      -H "Content-Type: application/json" \
@@ -62,7 +62,7 @@ curl -X POST http://localhost:8000/play_mcts \
 curl http://localhost:8000/state/0                           # board snapshot
 ```
 
-> **Tip:** Prefer [HTTPie](https://httpie.io/) for a friendlier CLI:
+> **Tip:** Prefer [HTTPie](https://httpie.io/) for a friendlier CLI, or use the PHP files in frontend/ to interact with the existing games via GUI:
 >
 > ```bash
 > http POST :8000/add_game
