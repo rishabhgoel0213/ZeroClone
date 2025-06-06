@@ -62,11 +62,11 @@ curl -X POST http://localhost:8000/play_mcts \
 curl http://localhost:8000/state/0                           # board snapshot
 ```
 
-> **Tip:** Prefer [HTTPie](https://httpie.io/) for a friendlier CLI, or use the PHP files in frontend/ to interact with the existing games via GUI:
+> **Tip:** Prefer [HTTPie](https://httpie.io/) for a friendlier CLI, or use the PHP files in the frontend folder to interact with the existing games via GUI:
 >
 > ```bash
 > http POST :8000/add_game
-> http POST :8000/play_move idx:=0 move:='[3,0]'
+> http POST :8000/play_move idx:=0 move:='3'
 > ```
 
 ## Technologies Used
