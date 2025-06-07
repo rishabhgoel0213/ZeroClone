@@ -2,7 +2,7 @@ from setuptools import setup, Extension
 import pybind11
 
 ext = Extension(
-    'mcts_cpp',
+    'mcts',
     sources=['src/bindings_mcts.cpp', 'src/mcts.cpp'],
     include_dirs=[pybind11.get_include()],
     language='c++',
@@ -10,7 +10,7 @@ ext = Extension(
 )
 
 setup(
-    name='mcts_cpp',
+    name='mcts',
     install_requires=['numpy<2.0', 'pybind11'],
     ext_modules=[ext]
 )

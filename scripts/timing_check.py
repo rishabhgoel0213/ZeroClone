@@ -7,19 +7,19 @@ from pathlib import Path
 
 import yaml
 
-import engine.core as core
+from engine.mcts import get_move
 from engine.policy_functions import Policy
 from engine.value_functions import Value
 
 
 def run_once(state, backend, value_fn, policy, sims: int, batch: int) -> float:
     t0 = time.perf_counter()
-    core.get_move(state, value_fn, policy, backend, simulations=sims, c=1.4, batch_size=batch)
+    get_move(state, value_fn, policy, backend, simulations=sims, c=1.4, batch_size=batch)
     return time.perf_counter() - t0
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Time core.get_move() end-to-end")
+    ap = argparse.ArgumentParser(description="Time get_move() end-to-end")
     ap.add_argument("-c", "--config", required=True, help="YAML config file")
     ap.add_argument("--sims",  type=int, default=2048, help="MCTS playouts")
     ap.add_argument("--batch", type=int, default=32,   help="Leaf batch size")
@@ -51,7 +51,7 @@ def main() -> None:
         t = run_once(init_state, backend, value_fn, policy, args.sims, args.batch)
         times.append(t)
 
-    print(f"--- core.get_move timing ({args.loops} runs) ---")
+    print(f"--- get_move timing ({args.loops} runs) ---")
     print(f"simulations : {args.sims}")
     print(f"batch size  : {args.batch}")
     print(f"mean  time  : {sum(times)/len(times):.3f} s")

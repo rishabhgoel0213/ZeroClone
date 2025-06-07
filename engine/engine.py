@@ -1,6 +1,6 @@
 import yaml
 import importlib
-import engine.core as core
+from engine.mcts import get_move
 from engine.value_functions import Value
 from engine.policy_functions import Policy
 from concurrent.futures import ThreadPoolExecutor
@@ -125,7 +125,7 @@ class Engine:
             return terminal_result
 
         value_fn = self.values[state.turn]
-        move = core.get_move(state, value_fn, self.policy, self.backend, simulations, c)
+        move = get_move(state, value_fn, self.policy, self.backend, simulations, c)
         return self.play_move(move, idx)
     
     def play_mcts_parallel(self, idxs, simulations=1000, c=1.4, max_workers=None):        
