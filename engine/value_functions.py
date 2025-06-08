@@ -8,7 +8,7 @@ class Value:
         self.init_args = kwargs
         init_ref = getattr(self, f"init_{self.name}", None)
         if init_ref is not None:
-            return init_ref()
+            init_ref()
 
     def __call__(self, state, **kwargs):
         method_ref = getattr(self, self.name)

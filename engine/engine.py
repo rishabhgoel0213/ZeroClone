@@ -1,6 +1,6 @@
 import yaml
 import importlib
-from engine.mcts import get_move
+import engine.mcts as mcts
 from engine.value_functions import Value
 from engine.policy_functions import Policy
 from concurrent.futures import ThreadPoolExecutor
@@ -78,7 +78,7 @@ class Engine:
             labels += list(reversed(label_entry))
 
         if not state_arrays:
-            dummy = self.backend.state_to_tensor(self.backend.get_init_state())
+            dummy = self.backend.state_to_tensor(self.backend.create_init_state())
             empty_states = np.empty((0,) + dummy.shape, dtype=np.float32)
             empty_labels = np.empty((0,), dtype=np.float32)
             return empty_states, empty_labels
@@ -125,7 +125,7 @@ class Engine:
             return terminal_result
 
         value_fn = self.values[state.turn]
-        move = get_move(state, value_fn, self.policy, self.backend, simulations, c)
+        move = mcts.get_move(state, value_fn, self.policy, self.backend, simulations, c)
         return self.play_move(move, idx)
     
     def play_mcts_parallel(self, idxs, simulations=1000, c=1.4, max_workers=None):        

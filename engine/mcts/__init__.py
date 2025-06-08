@@ -1,9 +1,9 @@
 from importlib import import_module
 
 try:
-    mcts_cpp = import_module('.mcts_cpp', __name__)
-    get_move = mcts_cpp.get_move
-except Exception:  # pragma: no cover - compiled module may be absent
-    mcts_cpp = None
+    mcts = import_module('.mcts', __name__)
+    get_move = mcts.get_move
+except Exception:
+    mcts = None
     def get_move(*args, **kwargs):
         raise ImportError('mcts_cpp extension not built')
