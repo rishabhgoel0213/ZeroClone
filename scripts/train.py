@@ -123,14 +123,15 @@ def train_and_save_latest \
     ValueNetwork = getattr(module, "ValueNetwork")
     train_fn = getattr(module, "train")
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     if Path(latest_path).exists():
-        model = torch.load(latest_path, map_location="cuda")
+        model = torch.load(latest_path, map_location=device)
         print("Loaded existing net from", latest_path)
     else:
         model = ValueNetwork()
         print("No previous model – created new network instance")
 
-    avg_loss = train_fn(model, loader, epochs, lr)
+    avg_loss = train_fn(model, loader, epochs, lr, device=device)
 
     checkpoint_dir = Path(latest_path).parent / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)

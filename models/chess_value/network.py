@@ -72,7 +72,9 @@ def add_safe_globals():
 
 
 
-def train(model, dataloader, epochs=10, lr=1e-3, device='cuda'):
+def train(model, dataloader, epochs=10, lr=1e-3, device=None):
+    if device is None:
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss()

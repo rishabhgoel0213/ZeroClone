@@ -2,6 +2,9 @@ import threading
 import queue
 import torch
 
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DTYPE = torch.float16 if DEVICE == "cuda" else torch.float32
+
 class Value:
     def __init__(self, name, **kwargs):
         self.name = name
@@ -57,7 +60,9 @@ class Value:
     # ================================================================== #
     def _nn_setup(self, model, batch_size: int):
         self.model = model
-        self.model.to(device='cuda', dtype=torch.float16).eval()
+        self.device = DEVICE
+        self.dtype = DTYPE
+        self.model.to(device=self.device, dtype=self.dtype).eval()
         self.batch_size = batch_size
         self._req_q = queue.Queue()
         t = threading.Thread(target=self._batch_worker, daemon=True)
@@ -65,8 +70,7 @@ class Value:
 
     def _nn_forward(self, state, args):
         arr = args['backend'].state_to_tensor(state)
-        tens = torch.tensor(arr, device='cuda')
-        tens = tens.half()
+        tens = torch.tensor(arr, device=self.device, dtype=self.dtype)
         out_q = queue.Queue()
         self._req_q.put((tens, out_q))
         return out_q.get()[0]
@@ -85,8 +89,8 @@ class Value:
             import numpy as np
 
             arrays, out_queues = zip(*batch)
-            batch_np = np.stack(arrays, axis=0)  
-            batch_tensor = torch.from_numpy(batch_np).to(device="cuda", dtype=torch.float16)
+            batch_np = np.stack(arrays, axis=0)
+            batch_tensor = torch.from_numpy(batch_np).to(device=self.device, dtype=self.dtype)
 
             with torch.no_grad():
                 outputs = self.model(batch_tensor).cpu().tolist()
@@ -103,7 +107,7 @@ class Value:
         ValueNetwork = getattr(module, "ValueNetwork")
         globals_fn = getattr(module, "add_safe_globals")
         globals_fn()
-        model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location="cuda")
+        model = ValueNetwork() if not os.path.exists(latest_path) else torch.load(latest_path, map_location=DEVICE)
         self._nn_setup(model, self.init_args.get('batch_size', 1))
 
     def network_latest(self, state, args):
@@ -118,7 +122,7 @@ class Value:
         getattr(module, "add_safe_globals")()
         ValueNetwork = getattr(module, "ValueNetwork")
 
-        model = ValueNetwork() if not os.path.exists(path) else torch.load(path, map_location='cuda')
+        model = ValueNetwork() if not os.path.exists(path) else torch.load(path, map_location=DEVICE)
         self._nn_setup(model, self.init_args.get('batch_size', 1))
     
     def network_at_path(self, state, args):
