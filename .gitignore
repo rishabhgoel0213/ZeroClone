@@ -4,6 +4,7 @@ build/
 __pycache__/
 *.so
 *.pth
+!*/latest.pth
 venv/
 logs/
 core
