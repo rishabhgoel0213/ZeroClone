@@ -20,8 +20,9 @@ struct Node
     int parent_action_idx;
     int N;
 
-    Node(py::object st, const py::list& move_list, Node* p=nullptr, int idx=-1): state(st), parent(p), parent_action_idx(idx), N(0) 
+    Node(py::object st, const py::list& move_list, Node* p=nullptr, int idx=-1): state(st), parent(p), parent_action_idx(idx), N(0)
     {
+        py::gil_scoped_acquire gil;
         for (auto m : move_list) moves.push_back(py::reinterpret_borrow<py::object>(m));
         size_t n = moves.size();
         Na.assign(n, 0);
@@ -30,8 +31,9 @@ struct Node
         children.assign(n, nullptr);
         for (size_t i=0;i<n;++i) untried.push_back(i);
     }
-    ~Node() 
+    ~Node()
     {
+        py::gil_scoped_acquire gil;
         for (Node* child : children) delete child;
     }
 };
@@ -97,10 +99,14 @@ static void backprop(Node* node, double result)
     }
 }
 
-py::object get_move(py::object state, py::object value, py::object policy, py::object backend, int simulations, double c, int batch_size) 
+py::object get_move(py::object state, py::object value, py::object policy, py::object backend, int simulations, double c, int batch_size)
 {
-    py::list moves = backend.attr("get_legal_moves")(state);
-    Node* root = new Node(state, moves);
+    Node* root;
+    {
+        py::gil_scoped_acquire gil;
+        py::list moves = backend.attr("get_legal_moves")(state);
+        root = new Node(state, moves);
+    }
     std::vector<Node*> pending_nodes;
     std::vector<py::object> pending_states;
     auto flush = [&]() 
@@ -147,6 +153,7 @@ py::object get_move(py::object state, py::object value, py::object policy, py::o
         Node* child = root->children[i];
         if (child && child->N > best_N) { best_N = child->N; best_idx = (int)i; }
     }
+    py::gil_scoped_acquire gil;
     py::object best_move = root->moves[best_idx];
     delete root;
     return best_move;
