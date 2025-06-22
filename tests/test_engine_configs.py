@@ -2,8 +2,6 @@ import os, sys, subprocess, importlib, glob
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Build C++ extensions required for the engine
 subprocess.run([sys.executable, 'setup.py', 'build_ext', '--inplace'], cwd=os.path.join('engine','games','chess'), check=True)
 subprocess.run([sys.executable, 'setup.py', 'build_ext', '--inplace'], cwd=os.path.join('engine','mcts'), check=True)
 importlib.invalidate_caches()
