@@ -1,4 +1,5 @@
 # ZeroClone
+> **Status: Under active development.** Many components are incomplete or partially implemented. Interfaces, configs, and features may change without notice.
 
 ## Project Overview
 **ZeroClone** is a general game-playing AI engine inspired by DeepMind’s AlphaZero. It combines **Monte Carlo Tree Search (MCTS)** with deep neural networks to learn strong play through self-play.  
