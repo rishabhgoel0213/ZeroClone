@@ -67,7 +67,18 @@ class MCTSRequest(BaseModel):
 def legal_moves(idx: int):
     try:
         moves = app.state.engine.legal_moves(idx)
-        return {"idx": idx, "moves": [[*m[0]] for m in moves]}
+        out: list[list[int]] = []
+        for m in moves:
+            # Chess-style: ((fr,fc,tr,tc), ...)
+            if isinstance(m, (list, tuple)) and len(m) > 0 and isinstance(m[0], (list, tuple)):
+                out.append([*m[0]])
+            # Simple tuple/list, e.g., Connect4: (col, 0)
+            elif isinstance(m, (list, tuple)):
+                out.append([*m])
+            else:
+                # Fallback: try to coerce single value
+                out.append([m])
+        return {"idx": idx, "moves": out}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -75,7 +86,12 @@ def legal_moves(idx: int):
 def play_move(req: MoveRequest):
     try:
         coords = tuple(req.move)
-        legal_mv = next((mv for mv in app.state.engine.legal_moves(req.idx) if mv[0] == coords), None)
+        legal_mv = None
+        for mv in app.state.engine.legal_moves(req.idx):
+            candidate = mv[0] if (isinstance(mv, (list, tuple)) and len(mv) > 0 and isinstance(mv[0], (list, tuple))) else mv
+            if tuple(candidate) == coords:
+                legal_mv = mv
+                break
         if legal_mv is None:
             raise ValueError("Illegal move")
 
@@ -136,7 +152,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
